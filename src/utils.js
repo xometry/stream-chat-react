@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown/with-html';
 import truncate from 'lodash/truncate';
 import data from 'emoji-mart/data/all.json';
 import React from 'react';
+import { MML } from 'mml-react';
 
 export const emojiSetDef = {
   spriteUrl: 'https://getstream.imgix.net/images/emoji-sprite.png',
@@ -129,10 +130,15 @@ export const renderText = (message) => {
   // take the @ mentions and turn them into markdown?
   // translate links
   let { text } = message;
-  const { mentioned_users } = message;
+  const { mentioned_users, mml } = message;
 
   if (!text) {
     return;
+  }
+
+  if (mml) {
+    // render MML, perhaps have a fallback for text?
+    return <MML source={mml} />;
   }
 
   const allowed = [
