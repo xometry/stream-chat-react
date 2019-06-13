@@ -9,7 +9,7 @@ import { MessageRepliesCountButton } from './MessageRepliesCountButton';
 import PropTypes from 'prop-types';
 import moment from 'moment';
 
-import { isOnlyEmojis, renderText } from '../utils';
+import { isOnlyEmojis, renderMML } from '../utils';
 
 /**
  * MessageCommerce - Render component, should be used together with the Message component
@@ -252,7 +252,7 @@ export class MessageCommerce extends PureComponent {
                   {this.props.unsafeHTML ? (
                     <div dangerouslySetInnerHTML={{ __html: message.html }} />
                   ) : (
-                    renderText(message)
+                    renderMML(message, this.props.handleAction)
                   )}
 
                   {/* if reactions show them */}

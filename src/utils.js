@@ -126,19 +126,24 @@ export const formatArray = (dict) => {
   return outStr;
 };
 
+export const renderMML = (message, actionHandler) => {
+  const { mml } = message;
+  if (mml) {
+    // render MML, perhaps have a fallback for text?
+    return <MML source={mml} onAction={actionHandler.bind(this, 'MML')}/>;
+  } else {
+    return renderText(message);
+  }
+}
+
 export const renderText = (message) => {
   // take the @ mentions and turn them into markdown?
   // translate links
   let { text } = message;
-  const { mentioned_users, mml } = message;
+  const { mentioned_users } = message;
 
   if (!text) {
     return;
-  }
-
-  if (mml) {
-    // render MML, perhaps have a fallback for text?
-    return <MML source={mml} />;
   }
 
   const allowed = [

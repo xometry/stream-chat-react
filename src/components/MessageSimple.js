@@ -15,7 +15,7 @@ import { EditMessageForm } from './EditMessageForm';
 import PropTypes from 'prop-types';
 import moment from 'moment';
 
-import { isOnlyEmojis, renderText } from '../utils';
+import { isOnlyEmojis, renderMML } from '../utils';
 
 /**
  * MessageSimple - Render component, should be used together with the Message component
@@ -480,7 +480,7 @@ export class MessageSimple extends PureComponent {
                   {this.props.unsafeHTML ? (
                     <div dangerouslySetInnerHTML={{ __html: message.html }} />
                   ) : (
-                    renderText(message)
+                    renderMML(message, this.props.handleAction)
                   )}
 
                   {/* if reactions show them */}
