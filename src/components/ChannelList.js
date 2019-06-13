@@ -10,6 +10,7 @@ import { LoadMorePaginator } from './LoadMorePaginator';
 import { withChatContext } from '../context';
 import { ChannelListTeam } from './ChannelListTeam';
 import { smartRender } from '../utils';
+import uniqBy from 'lodash.uniqby';
 
 /**
  * ChannelList - A preview list of channels, allowing you to select the channel you want to open
@@ -63,6 +64,7 @@ class ChannelList extends PureComponent {
       hasNextPage: false,
       offset: 0,
       error: false,
+      connectionRecoveredCount: 0,
     };
 
     this.menuButton = React.createRef();
@@ -135,14 +137,21 @@ class ChannelList extends PureComponent {
       this.moveChannelUp(e.cid);
     }
 
+    // make sure to re-render the channel list after connection is recovered
+    if (e.type === 'connection.recovered') {
+      this.setState((prevState) => ({
+        connectionRecoveredCount: prevState.connectionRecoveredCount + 1,
+      }));
+    }
+
     // move channel to start
     if (e.type === 'notification.message_new') {
       // if new message, put move channel up
       // get channel if not in state currently
-      const channel = await this.getChannel(e.cid);
+      const channel = await this.getChannel(e.channel.type, e.channel.id);
       // move channel to starting position
       this.setState((prevState) => ({
-        channels: [...channel, ...prevState.channels],
+        channels: uniqBy([channel, ...prevState.channels], 'cid'),
       }));
     }
 
@@ -154,9 +163,9 @@ class ChannelList extends PureComponent {
       ) {
         this.props.onAddedToChannel(e);
       } else {
-        const channel = await this.getChannel(e.channel.cid);
+        const channel = await this.getChannel(e.channel.type, e.channel.id);
         this.setState((prevState) => ({
-          channels: [...channel, ...prevState.channels],
+          channels: uniqBy([channel, ...prevState.channels], 'cid'),
         }));
       }
     }
@@ -179,22 +188,13 @@ class ChannelList extends PureComponent {
         });
       }
     }
-
     return null;
   };
 
-  getChannel = async (cid) => {
-    const channelPromise = this.props.client.queryChannels({ cid });
-
-    try {
-      let channelQueryResponse = channelPromise;
-      if (isPromise(channelQueryResponse)) {
-        channelQueryResponse = await channelPromise;
-      }
-      return channelQueryResponse;
-    } catch (e) {
-      console.warn(e);
-    }
+  getChannel = async (type, id) => {
+    const channel = this.props.client.channel(type, id);
+    await channel.watch();
+    return channel;
   };
 
   moveChannelUp = (cid) => {
@@ -233,15 +233,16 @@ class ChannelList extends PureComponent {
   _renderChannel = (item) => {
     const { Preview, setActiveChannel, channel } = this.props;
 
-    const args = {
+    const props = {
       channel: item,
       activeChannel: channel,
       closeMenu: this.closeMenu,
       Preview,
       setActiveChannel,
       key: item.id,
+      connectionRecoveredCount: this.state.connectionRecoveredCount,
     };
-    return smartRender(ChannelPreview, { ...args });
+    return smartRender(ChannelPreview, { ...props });
   };
 
   render() {
