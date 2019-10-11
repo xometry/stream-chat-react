@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import { withChannelContext } from '../context';
 import PropTypes from 'prop-types';
 import { MessageInputLarge } from './MessageInputLarge';
+import { SendButton } from './SendButton';
 import Immutable from 'seamless-immutable';
 import { generateRandomId } from '../utils';
 import uniq from 'lodash/uniq';
@@ -10,6 +11,13 @@ import {
   dataTransferItemsToFiles,
 } from 'react-file-utils';
 import { logChatPromiseExecution } from 'stream-chat';
+
+// polyfill for IE11 to make MessageInput functional
+if (!Element.prototype.matches) {
+  Element.prototype.matches =
+    Element.prototype.msMatchesSelector ||
+    Element.prototype.webkitMatchesSelector;
+}
 
 /**
  * MessageInput - Input a new message, support for all the rich features such as image uploads, @mentions, emoticons etc.
@@ -114,6 +122,12 @@ class MessageInput extends PureComponent {
 
     /** Override file upload request */
     doFileUploadRequest: PropTypes.func,
+    /**
+     * Custom UI component for send button.
+     *
+     * Defaults to and accepts same props as: [SendButton](https://getstream.github.io/stream-chat-react/#sendbutton)
+     * */
+    SendButton: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
   };
 
   static defaultProps = {
@@ -121,6 +135,7 @@ class MessageInput extends PureComponent {
     disabled: false,
     grow: true,
     Input: MessageInputLarge,
+    SendButton,
   };
 
   componentDidMount() {

@@ -68,7 +68,6 @@ class Channel extends PureComponent {
      * Defaults to and accepts same props as: [Attachment](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Attachment.js)
      * */
     Attachment: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
-
     /**
      * Handle for click on @mention in message
      *
@@ -83,6 +82,12 @@ class Channel extends PureComponent {
      * @param {User} user   Target [user object](https://getstream.io/chat/docs/#chat-doc-set-user) which is hovered
      */
     onMentionsHover: PropTypes.func,
+    /** Weather to allow multiple attachment uploads */
+    multipleUploads: PropTypes.bool,
+    /** List of accepted file types */
+    acceptedFiles: PropTypes.array,
+    /** Maximum number of attachments allowed per message */
+    maxNumberOfFiles: PropTypes.number,
   };
 
   static defaultProps = {
@@ -107,7 +112,7 @@ class ChannelInner extends PureComponent {
     super(props);
     this.state = {
       error: false,
-      // Loading the intial content of the channel
+      // Loading the initial content of the channel
       loading: true,
       // Loading more messages
       loadingMore: false,
@@ -206,7 +211,7 @@ class ChannelInner extends PureComponent {
     this._loadMoreFinishedDebounced.cancel();
     this._loadMoreThreadFinishedDebounced.cancel();
 
-    if (this.visibilityListener) {
+    if (this.visibilityListener || this.visibilityListener === 0) {
       Visibility.unbind(this.visibilityListener);
     }
   }
@@ -278,10 +283,10 @@ class ChannelInner extends PureComponent {
       members: channel.state.members,
       watcher_count: channel.state.watcher_count,
       loading: false,
-      typing: {},
+      typing: Immutable({}),
     });
 
-    channel.markRead();
+    if (channel.countUnread() > 0) channel.markRead();
   }
 
   updateMessage = (updatedMessage, extraState) => {
@@ -517,7 +522,18 @@ class ChannelInner extends PureComponent {
     if (this.state.loadingMore) return;
     this.setState({ loadingMore: true });
 
-    const oldestID = this.state.messages[0] ? this.state.messages[0].id : null;
+    const oldestMessage = this.state.messages[0];
+
+    if (oldestMessage && oldestMessage.status !== 'received') {
+      this.setState({
+        loadingMore: false,
+      });
+
+      return;
+    }
+
+    const oldestID = oldestMessage ? oldestMessage.id : null;
+
     const perPage = limit;
     let queryResponse;
     try {
@@ -582,7 +598,6 @@ class ChannelInner extends PureComponent {
     removeMessage: this.removeMessage,
     sendMessage: this.sendMessage,
     retrySendMessage: this.retrySendMessage,
-
     loadMore: this.loadMore,
 
     // thread related
