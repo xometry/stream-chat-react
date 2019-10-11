@@ -1,6 +1,46 @@
 # Changelog
 
-## [0.6.26](https://github.com/GetStream/stream-chat-react/releases/tag/v0.6.26) 2019-09-05
+## [0.7.6](https://github.com/GetStream/stream-chat-react/releases/tag/v0.7.6) 2019-10-08
+
+- Fixed unbinding of visibility listener
+
+## [0.7.5](https://github.com/GetStream/stream-chat-react/releases/tag/v0.7.5) 2019-10-07
+
+- Updated js-client with fix for failing fileuploads
+
+## [0.7.4](https://github.com/GetStream/stream-chat-react/releases/tag/v0.7.4) 2019-10-07
+
+- Fixed styling issues for SendButton
+
+## [0.7.3](https://github.com/GetStream/stream-chat-react/releases/tag/v0.7.3) 2019-10-02
+
+- Added SendButton prop to MessageInput. This only shows on mobile to make sure you're able to submit the form without having a return button.
+
+## [0.7.2](https://github.com/GetStream/stream-chat-react/releases/tag/v0.7.2) 2019-09-30
+
+- Updating js-client version
+
+## [0.7.1](https://github.com/GetStream/stream-chat-react/releases/tag/v0.7.1) 2019-09-30
+
+- Fix - Adding typescript declaration files in production build
+
+## [0.7.0](https://github.com/GetStream/stream-chat-react/releases/tag/v0.7.0) 2019-09-27
+
+- Adding typescript declaration file
+
+## [0.6.27](https://github.com/GetStream/stream-chat-react/releases/tag/v0.6.27) 2019-09-20
+
+- Added `EmptyStateIndicator` prop to [ChannelList](https://getstream.github.io/stream-chat-react/#!/ChannelList) and [MessageList](https://getstream.github.io/stream-chat-react/#!/MessageList)
+- Added `watchers` prop to [ChannelList](https://getstream.github.io/stream-chat-react/#!/ChannelList) to specify [watchers pagination query](https://getstream.io/chat/docs/#channel_pagination) on `setActiveChannel`, including this makes one extra query on selecting a channel from the ChannelList
+- Updated react-images to version `1.0.0`
+
+## [0.6.26](https://github.com/GetStream/stream-chat-react/releases/tag/v0.6.26) 2019-09-10
+
+- Add IE 11 support for MessageInput
+- Fixing pagination issue when oldest message is not received yet
+- Fixing issue that didn't display unread count correctly on initial load
+
+## [0.6.25](https://github.com/GetStream/stream-chat-react/releases/tag/v0.6.25) 2019-09-05
 
 - The built in MessageInput components now use native emoji to create consistent rendering between the picker and the message
 

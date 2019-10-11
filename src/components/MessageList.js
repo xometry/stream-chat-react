@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import { Message } from './Message';
 import { withChannelContext } from '../context';
 import PropTypes from 'prop-types';
+import { EmptyStateIndicator } from './EmptyStateIndicator';
 import { ReverseInfiniteScroll } from './ReverseInfiniteScroll';
 import { MessageNotification } from './MessageNotification';
 import { MessageSimple } from './MessageSimple';
@@ -64,7 +65,7 @@ class MessageList extends PureComponent {
      */
     threadList: PropTypes.bool,
     /**
-     * Function that returns message/text as string to be shown as notification, when request for flagging a message is succesful
+     * Function that returns message/text as string to be shown as notification, when request for flagging a message is successful
      *
      * This function should accept following params:
      *
@@ -82,7 +83,7 @@ class MessageList extends PureComponent {
      * */
     getFlagMessageErrorNotification: PropTypes.func,
     /**
-     * Function that returns message/text as string to be shown as notification, when request for muting a user is succesful
+     * Function that returns message/text as string to be shown as notification, when request for muting a user is successful
      *
      * This function should accept following params:
      *
@@ -105,6 +106,14 @@ class MessageList extends PureComponent {
     Attachment: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
     /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
     Message: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
+    /**
+     * The UI Indicator to use when MessagerList or ChannelList is empty
+     * */
+    EmptyStateIndicator: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
+    /**
+     * Component to render at the top of the MessageList
+     * */
+    HeaderComponent: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
     /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
     messages: PropTypes.array.isRequired,
     /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
@@ -136,6 +145,7 @@ class MessageList extends PureComponent {
     threadList: false,
     Attachment,
     dateSeparator: DateSeparator,
+    EmptyStateIndicator,
     unsafeHTML: false,
     noGroupByUser: false,
     messageActions: Object.keys(MESSAGE_ACTIONS),
@@ -367,6 +377,57 @@ class MessageList extends PureComponent {
     return newMessages;
   };
 
+  insertIntro = (messages) => {
+    const newMessages = messages || [];
+    // if no headerPosition is set, HeaderComponent will go at the top
+    if (!this.props.headerPosition) {
+      newMessages.unshift({
+        type: 'channel.intro',
+        // created_at: new Date(0),
+      });
+      return newMessages;
+    }
+
+    // if no messages, intro get's inserted
+    if (!newMessages.length) {
+      newMessages.unshift({
+        type: 'channel.intro',
+      });
+      return newMessages;
+    }
+
+    // else loop over the messages
+    for (const [i, message] of messages.entries()) {
+      const messageTime = message.created_at
+        ? message.created_at.getTime()
+        : null;
+      const nextMessageTime =
+        messages[i + 1] && messages[i + 1].created_at
+          ? messages[i + 1].created_at.getTime()
+          : null;
+      const { headerPosition } = this.props;
+
+      // headerposition is smaller than message time so comes after;
+      if (messageTime < headerPosition) {
+        // if header position is also smaller than message time continue;
+        if (nextMessageTime < headerPosition) {
+          if (messages[i + 1] && messages[i + 1].type === 'message.date')
+            continue;
+          if (!nextMessageTime) {
+            newMessages.push({ type: 'channel.intro' });
+            return newMessages;
+          }
+          continue;
+        } else {
+          newMessages.splice(i + 1, 0, { type: 'channel.intro' });
+          return newMessages;
+        }
+      }
+    }
+
+    return newMessages;
+  };
+
   goToNewMessages = async () => {
     await this.scrollToBottom();
     this.setState({
@@ -440,6 +501,7 @@ class MessageList extends PureComponent {
       const message = messages[i];
       const nextMessage = messages[i + 1];
       const groupStyles = [];
+
       if (message.type === 'message.date') {
         continue;
       }
@@ -448,10 +510,15 @@ class MessageList extends PureComponent {
         continue;
       }
 
+      if (message.type === 'channel.intro') {
+        continue;
+      }
+
       const userId = message.user.id;
 
       const isTopMessage =
         !previousMessage ||
+        previousMessage.type === 'channel.intro' ||
         previousMessage.type === 'message.date' ||
         previousMessage.type === 'system' ||
         previousMessage.type === 'channel.event' ||
@@ -465,6 +532,7 @@ class MessageList extends PureComponent {
         nextMessage.type === 'message.date' ||
         nextMessage.type === 'system' ||
         nextMessage.type === 'channel.event' ||
+        nextMessage.type === 'channel.intro' ||
         nextMessage.attachments.length !== 0 ||
         userId !== nextMessage.user.id ||
         nextMessage.type === 'error' ||
@@ -576,11 +644,14 @@ class MessageList extends PureComponent {
     let allMessages = [...this.props.messages];
 
     allMessages = this.insertDates(allMessages);
-
+    if (this.props.HeaderComponent) {
+      allMessages = this.insertIntro(allMessages);
+    }
     const messageGroupStyles = this.getGroupStyles(allMessages);
 
     const TypingIndicator = this.props.TypingIndicator;
     const DateSeparator = this.props.dateSeparator;
+    const HeaderComponent = this.props.HeaderComponent;
 
     // sort by date
     allMessages.sort(function(a, b) {
@@ -606,6 +677,12 @@ class MessageList extends PureComponent {
         elements.push(
           <li key={message.date.toISOString() + '-i'}>
             <DateSeparator date={message.date} />
+          </li>,
+        );
+      } else if (message.type === 'channel.intro') {
+        elements.push(
+          <li key="intro">
+            <HeaderComponent />
           </li>,
         );
       } else if (
@@ -692,27 +769,31 @@ class MessageList extends PureComponent {
           }`}
           ref={this.messageList}
         >
-          <ReverseInfiniteScroll
-            loadMore={this._loadMore}
-            hasMore={this.props.hasMore}
-            isLoading={this.props.loadingMore}
-            listenToScroll={this.listenToScroll}
-            useWindow={false}
-            loader={
-              <Center key="loadingindicator">
-                <LoadingIndicator size={20} />
-              </Center>
-            }
-          >
-            <ul className="str-chat__ul">{elements}</ul>
-            {this.props.TypingIndicator && (
-              <TypingIndicator
-                typing={this.props.typing}
-                client={this.props.client}
-              />
-            )}
-            <div key="bottom" ref={this.bottomRef} />
-          </ReverseInfiniteScroll>
+          {!elements.length ? (
+            <EmptyStateIndicator listType="message" />
+          ) : (
+            <ReverseInfiniteScroll
+              loadMore={this._loadMore}
+              hasMore={this.props.hasMore}
+              isLoading={this.props.loadingMore}
+              listenToScroll={this.listenToScroll}
+              useWindow={false}
+              loader={
+                <Center key="loadingindicator">
+                  <LoadingIndicator size={20} />
+                </Center>
+              }
+            >
+              <ul className="str-chat__ul">{elements}</ul>
+              {this.props.TypingIndicator && (
+                <TypingIndicator
+                  typing={this.props.typing}
+                  client={this.props.client}
+                />
+              )}
+              <div key="bottom" ref={this.bottomRef} />
+            </ReverseInfiniteScroll>
+          )}
         </div>
 
         <div className="str-chat__list-notifications">

@@ -28,7 +28,7 @@ export class MessageCommerce extends PureComponent {
     Attachment: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
     /**
      *
-     * @deprecated Its not recommended to use this anymore. All the methods in this HOC are provided explicitely.
+     * @deprecated Its not recommended to use this anymore. All the methods in this HOC are provided explicitly.
      *
      * The higher order message component, most logic is delegated to this component
      * @see See [Message HOC](https://getstream.github.io/stream-chat-react/#message) for example
@@ -270,7 +270,7 @@ export class MessageCommerce extends PureComponent {
               <React.Fragment>
                 {this.renderOptions()}
                 {/* if reactions show them */}
-                {hasReactions > 0 && !this.state.showDetailedReactions && (
+                {hasReactions && !this.state.showDetailedReactions && (
                   <ReactionsList
                     reactions={message.latest_reactions}
                     reaction_counts={message.reaction_counts}
@@ -329,7 +329,7 @@ export class MessageCommerce extends PureComponent {
                   )}
 
                   {/* if reactions show them */}
-                  {hasReactions > 0 && !this.state.showDetailedReactions && (
+                  {hasReactions && !this.state.showDetailedReactions && (
                     <ReactionsList
                       reverse
                       reactions={message.latest_reactions}
