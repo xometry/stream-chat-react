@@ -1,10 +1,9 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import deepequal from 'deep-equal';
 
 import { MessageSimple } from './MessageSimple';
-import PropTypes from 'prop-types';
 import { Attachment } from './Attachment';
-
-import deepequal from 'deep-equal';
 import { MESSAGE_ACTIONS } from '../utils';
 
 /**
@@ -115,6 +114,13 @@ export class Message extends Component {
     onMentionsHover: PropTypes.func,
     /** @see See [Channel Context](https://getstream.github.io/stream-chat-react/#channelcontext) */
     openThread: PropTypes.func,
+    /** Handler to clear the edit state of message. It is defined in [MessageList](https://getstream.github.io/stream-chat-react/#messagelist) component */
+    clearEditingState: PropTypes.func,
+    /**
+     * Additional props for underlying MessageInput component.
+     * Available props - https://getstream.github.io/stream-chat-react/#messageinput
+     * */
+    additionalMessageInputProps: PropTypes.object,
   };
 
   static defaultProps = {
@@ -206,11 +212,7 @@ export class Message extends Component {
     this.isOwner() ||
     this.isAdmin();
 
-  canDeleteMessage = (message) =>
-    this.isMyMessage(message) ||
-    this.isModerator() ||
-    this.isOwner() ||
-    this.isAdmin();
+  canDeleteMessage = (message) => this.canEditMessage(message);
 
   /**
    * Following function validates a function which returns notification message.
@@ -235,16 +237,18 @@ export class Message extends Component {
     const {
       getFlagMessageSuccessNotification,
       getFlagMessageErrorNotification,
+      message,
+      client,
+      addNotification,
     } = this.props;
-    const message = this.props.message;
 
     try {
-      await this.props.client.flagMessage(message.id);
+      await client.flagMessage(message.id);
       const successMessage = this.validateAndGetNotificationMessage(
         getFlagMessageSuccessNotification,
         [message],
       );
-      this.props.addNotification(
+      addNotification(
         successMessage
           ? successMessage
           : 'Message has been successfully flagged',
@@ -255,7 +259,7 @@ export class Message extends Component {
         getFlagMessageErrorNotification,
         [message],
       );
-      this.props.addNotification(
+      addNotification(
         errorMessage
           ? errorMessage
           : 'Error adding flag: Either the flag already exist or there is issue with network connection ...',
@@ -270,17 +274,19 @@ export class Message extends Component {
     const {
       getMuteUserSuccessNotification,
       getMuteUserErrorNotification,
+      message,
+      client,
+      addNotification,
     } = this.props;
-    const message = this.props.message;
 
     try {
-      await this.props.client.muteUser(message.user.id);
+      await client.muteUser(message.user.id);
       const successMessage = this.validateAndGetNotificationMessage(
         getMuteUserSuccessNotification,
         [message.user],
       );
 
-      this.props.addNotification(
+      addNotification(
         successMessage
           ? successMessage
           : `User with id ${message.user.id} has been muted`,
@@ -292,7 +298,7 @@ export class Message extends Component {
         [message.user],
       );
 
-      this.props.addNotification(
+      addNotification(
         errorMessage ? errorMessage : 'Error muting a user ...',
         'error',
       );
@@ -300,18 +306,20 @@ export class Message extends Component {
   };
 
   handleEdit = (event) => {
+    const { setEditingState, message } = this.props;
+
     if (event !== undefined && event.preventDefault) {
       event.preventDefault();
     }
 
-    this.props.setEditingState(this.props.message);
+    setEditingState(message);
   };
 
   handleDelete = async (event) => {
     event.preventDefault();
-    const message = this.props.message;
-    const data = await this.props.client.deleteMessage(message.id);
-    this.props.updateMessage(data.message);
+    const { message, client, updateMessage } = this.props;
+    const data = await client.deleteMessage(message.id);
+    updateMessage(data.message);
   };
 
   handleReaction = async (reactionType, event) => {
@@ -399,10 +407,13 @@ export class Message extends Component {
   };
 
   onMentionsHover = (e) => {
-    if (typeof this.props.onMentionsHover !== 'function') {
+    const { onMentionsHover, message } = this.props;
+
+    if (typeof onMentionsHover !== 'function') {
       return;
     }
-    this.props.onMentionsHover(e, this.props.message.mentioned_users);
+
+    onMentionsHover(e, message.mentioned_users);
   };
 
   getMessageActions = () => {
@@ -413,7 +424,7 @@ export class Message extends Component {
     if (messageActionsProps && typeof messageActionsProps === 'boolean') {
       // If value of messageActionsProps is true, then populate all the possible values
       messageActions = Object.keys(MESSAGE_ACTIONS);
-    } else if (messageActionsProps && messageActionsProps.length >= 0) {
+    } else if (messageActionsProps && messageActionsProps.length > 0) {
       messageActions = [...messageActionsProps];
     } else {
       return [];
@@ -452,7 +463,7 @@ export class Message extends Component {
 
   render() {
     const config = this.props.channel.getConfig();
-    const message = this.props.message;
+    const { message } = this.props;
 
     const actionsEnabled =
       message.type === 'regular' && message.status === 'received';
@@ -471,10 +482,10 @@ export class Message extends Component {
         handleDelete={this.handleDelete}
         handleEdit={this.handleEdit}
         handleRetry={this.handleRetry}
-        isMyMessage={this.isMyMessage}
-        openThread={
+        handleOpenThread={
           this.props.openThread && this.props.openThread.bind(this, message)
         }
+        isMyMessage={this.isMyMessage}
         channelConfig={config}
         onMentionsClickMessage={this.onMentionsClick}
         onMentionsHoverMessage={this.onMentionsHover}

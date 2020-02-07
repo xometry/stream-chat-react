@@ -16,7 +16,7 @@ export class MessageActionsBox extends React.Component {
      * @deprecated
      *
      *  The message component, most logic is delegated to this component and MessageActionsBox uses the following functions explicitly:
-     *  `handleFlag`, `handleMute`, `handleEdit`, `handleDelete`, `canDeleteMessagec`, `canEditMessage`, `isMyMessage`, `isAdmin`
+     *  `handleFlag`, `handleMute`, `handleEdit`, `handleDelete`, `canDeleteMessage`, `canEditMessage`, `isMyMessage`, `isAdmin`
      */
     Message: PropTypes.oneOfType([
       PropTypes.node,
@@ -27,9 +27,42 @@ export class MessageActionsBox extends React.Component {
     mine: PropTypes.bool,
     /** DOMRect object for parent MessageList component */
     messageListRect: PropTypes.object,
+    /**
+     * Handler for flaging a current message
+     *
+     * @param event React's MouseEventHandler event
+     * @returns void
+     * */
+    handleFlag: PropTypes.func,
+    /**
+     * Handler for muting a current message
+     *
+     * @param event React's MouseEventHandler event
+     * @returns void
+     * */
+    handleMute: PropTypes.func,
+    /**
+     * Handler for editing a current message
+     *
+     * @param event React's MouseEventHandler event
+     * @returns void
+     * */
+    handleEdit: PropTypes.func,
+    /**
+     * Handler for deleting a current message
+     *
+     * @param event React's MouseEventHandler event
+     * @returns void
+     * */
+    handleDelete: PropTypes.func,
+    /**
+     * Returns array of avalable message actions for current message.
+     * Please check [Message](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Message.js) component for default implementation.
+     */
+    getMessageActions: PropTypes.func,
   };
 
-  static defaultProp = {
+  static defaultProps = {
     open: false,
   };
 

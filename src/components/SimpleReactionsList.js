@@ -8,11 +8,17 @@ import { defaultMinimalEmojis, emojiSetDef, emojiData } from '../utils';
 export class SimpleReactionsList extends React.PureComponent {
   static propTypes = {
     reactions: PropTypes.array,
-    reaction_coutns: PropTypes.object,
-    renderReactions: PropTypes.func,
+    /** Object/map of reaction id/type (e.g. 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry') vs count */
+    reaction_counts: PropTypes.object,
     showTooltip: PropTypes.bool,
     /** Provide a list of reaction options [{name: 'angry', emoji: 'angry'}] */
     reactionOptions: PropTypes.array,
+    /**
+     * Handler to set/unset reaction on message.
+     *
+     * @param type e.g. 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry'
+     * */
+    handleReaction: PropTypes.func,
   };
 
   static defaultProps = {
@@ -115,12 +121,10 @@ export class SimpleReactionsList extends React.PureComponent {
     ));
   };
 
-  getUsernames = (reactions) => {
-    const usernames = reactions.map((item) =>
+  getUsernames = (reactions) =>
+    reactions.map((item) =>
       item.user !== null ? item.user.name || item.user.id : 'null',
     );
-    return usernames;
-  };
 
   setUsernames = (type) => {
     const reactionsByType = this.getReactionsByType(this.props.reactions);
@@ -136,10 +140,7 @@ export class SimpleReactionsList extends React.PureComponent {
     );
   };
 
-  renderUsernames = (users) => {
-    const str = users.join(', ');
-    return str;
-  };
+  renderUsernames = (users) => users.join(', ');
 
   render() {
     const { reactions } = this.props;

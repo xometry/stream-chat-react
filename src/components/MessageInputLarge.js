@@ -22,6 +22,8 @@ export class MessageInputLarge extends PureComponent {
     focus: PropTypes.bool.isRequired,
     /** Grow the textarea while you're typing */
     grow: PropTypes.bool.isRequired,
+    /** Specify the max amount of rows the textarea is able to grow */
+    maxRows: PropTypes.number.isRequired,
     /** Make the textarea disabled */
     disabled: PropTypes.bool,
     /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
@@ -78,6 +80,12 @@ export class MessageInputLarge extends PureComponent {
     maxNumberOfFiles: PropTypes.object,
     /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
     acceptedFiles: PropTypes.object,
+    /**
+     * Custom UI component for send button.
+     *
+     * Defaults to and accepts same props as: [SendButton](https://getstream.github.io/stream-chat-react/#sendbutton)
+     * */
+    SendButton: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
   };
 
   renderUploads = () => (
@@ -132,7 +140,7 @@ export class MessageInputLarge extends PureComponent {
   render() {
     const SendButton = this.props.SendButton;
     return (
-      <div style={{ position: 'relative', zIndex: 100, width: '100%' }}>
+      <div className="str-chat__input-large">
         <ImageDropzone
           accept={this.props.acceptedFiles}
           multiple={this.props.multipleUploads}
@@ -156,6 +164,7 @@ export class MessageInputLarge extends PureComponent {
                 onSelectItem={this.props.onSelectItem}
                 value={this.props.text}
                 rows={1}
+                maxRows={this.props.maxRows}
                 placeholder="Type your message"
                 onPaste={this.props.onPaste}
                 grow={this.props.grow}

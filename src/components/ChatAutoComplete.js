@@ -19,6 +19,8 @@ export class ChatAutoComplete extends PureComponent {
     rows: PropTypes.number,
     /** Grow the number of rows of the textarea while you're typing */
     grow: PropTypes.bool,
+    /** Maximum number of rows */
+    maxRows: PropTypes.number,
     /** Make the textarea disabled */
     disabled: PropTypes.bool,
     /** The value of the textarea */
@@ -33,8 +35,6 @@ export class ChatAutoComplete extends PureComponent {
     placeholder: PropTypes.string,
     /** What loading component to use for the auto complete when loading results. */
     LoadingIndicator: PropTypes.node,
-    /** function to set up your triggers for autocomplete(eg. '@' for mentions, '/' for commands) */
-    trigger: PropTypes.func,
     /** Minimum number of Character */
     minChar: PropTypes.number,
     /** Array of [user object](https://getstream.io/chat/docs/#chat-doc-set-user). Used for mentions suggestions */
@@ -154,6 +154,7 @@ export class ChatAutoComplete extends PureComponent {
         trigger={this.getTriggers()}
         replaceWord={this.emojiReplace}
         minChar={0}
+        maxRows={this.props.maxRows}
         innerRef={
           innerRef &&
           ((ref) => {

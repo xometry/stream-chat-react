@@ -35,12 +35,7 @@ export class Attachment extends PureComponent {
     actionHandler: PropTypes.func.isRequired,
   };
 
-  render() {
-    const { attachment: a } = this.props;
-    if (!a) {
-      return null;
-    }
-
+  attachmentType(a) {
     let type, extra;
     if (a.actions && a.actions.length > 0) {
       extra = 'actions';
@@ -61,36 +56,41 @@ export class Attachment extends PureComponent {
       type = 'card';
       extra = 'no-image';
     }
+    return { type, extra };
+  }
 
+  renderAttachmentActions = (a) => (
+    <AttachmentActions
+      key={'key-actions-' + a.id}
+      {...a}
+      actionHandler={this.props.actionHandler}
+    />
+  );
+
+  renderAttachment = (a) => (
+    <div className="str-chat__attachment" key={`key-image-${a.id}`}>
+      <Card {...a} key={`key-card-${a.id}`} />
+      {this.renderAttachmentActions(a)}
+    </div>
+  );
+
+  render() {
+    const { attachment: a } = this.props;
+    if (!a) {
+      return null;
+    }
+
+    const { type, extra } = this.attachmentType(a);
     if (type === 'card' && !a.title_link && !a.og_scrape_url) {
       return null;
     }
     const results = [];
-    if (type === 'card') {
+    if (type === 'image') {
       if (a.actions && a.actions.length) {
         results.push(
-          <div style={{ maxWidth: 450 }} key={`key-image-${a.id}`}>
-            <Card {...a} key={`key-card-${a.id}`} />
-            <AttachmentActions
-              key={'key-actions-' + a.id}
-              {...a}
-              actionHandler={this.props.actionHandler}
-            />
-          </div>,
-        );
-      } else {
-        results.push(<Card {...a} key={`key-card-${a.id}`} />);
-      }
-    } else if (type === 'image') {
-      if (a.actions && a.actions.length) {
-        results.push(
-          <div style={{ maxWidth: 450 }} key={`key-image-${a.id}`}>
+          <div className="str-chat__attachment" key={`key-image-${a.id}`}>
             <Image {...a} />
-            <AttachmentActions
-              key={'key-actions-' + a.id}
-              {...a}
-              actionHandler={this.props.actionHandler}
-            />
+            {this.renderAttachmentActions(a)}
           </div>,
         );
       } else {
@@ -119,14 +119,14 @@ export class Attachment extends PureComponent {
         );
     } else if (type === 'audio') {
       results.push(
-        <div style={{ maxWidth: 450 }} key={`key-video-${a.id}`}>
+        <div className="str-chat__attachment" key={`key-video-${a.id}`}>
           <Audio og={a} />
         </div>,
       );
     } else if (type === 'media') {
       if (a.actions && a.actions.length) {
         results.push(
-          <div style={{ maxWidth: 450 }} key={`key-video-${a.id}`}>
+          <div className="str-chat__attachment" key={`key-video-${a.id}`}>
             <div className="str-chat__player-wrapper">
               <ReactPlayer
                 className="react-player"
@@ -136,11 +136,7 @@ export class Attachment extends PureComponent {
                 controls
               />
             </div>
-            <AttachmentActions
-              key={'key-actions-' + a.id}
-              {...a}
-              actionHandler={this.props.actionHandler}
-            />
+            {this.renderAttachmentActions(a)}
           </div>,
         );
       } else {
@@ -158,16 +154,7 @@ export class Attachment extends PureComponent {
       }
     } else {
       if (a.actions && a.actions.length) {
-        results.push(
-          <div style={{ maxWidth: 450 }} key={`key-image-${a.id}`}>
-            <Card {...a} key={`key-card-${a.id}`} />
-            <AttachmentActions
-              key={'key-actions-' + a.id}
-              {...a}
-              actionHandler={this.props.actionHandler}
-            />
-          </div>,
-        );
+        results.push(this.renderAttachment(a));
       } else {
         results.push(<Card {...a} key={`key-card-${a.id}`} />);
       }

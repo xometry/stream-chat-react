@@ -1,5 +1,66 @@
 # Changelog
 
+## [0.8.1](https://github.com/GetStream/stream-chat-react/releases/tag/v0.8.1) 2020-02-07
+
+- Fixing broken typescript file [cc86f6f](https://github.com/GetStream/stream-chat-react/commit/cc86f6fea998e8581121c7da42870b0c5d316d8c)
+
+## [0.8.0](https://github.com/GetStream/stream-chat-react/releases/tag/v0.8.0) 2020-02-07
+
+- Updated dependencies [dfe466d](https://github.com/GetStream/stream-chat-react/commit/dfe466d43e75b7213857fdf9a6e007ecfc3d4614)
+- Exported all the components and updated typescript types - [41e478f](https://github.com/GetStream/stream-chat-react/commit/41e478fc1d37aad8994b9b1075ce9a576a1497f0)
+
+## [0.7.20](https://github.com/GetStream/stream-chat-react/releases/tag/v0.7.20) 2020-01-14
+
+- When you change the filters prop on the ChannelList component this now we will refresh the channels with the new query
+
+## [0.7.17](https://github.com/GetStream/stream-chat-react/releases/tag/v0.7.17) 2020-01-02
+
+- Added `maxRows` props to MessageInput component
+
+## [0.7.16](https://github.com/GetStream/stream-chat-react/releases/tag/v0.7.16) 2020-01-02
+
+- Removed inline styles from multiple locations
+- Exporting new component `ChatAutoComplete` (Advanced usage only)
+
+## [0.7.15](https://github.com/GetStream/stream-chat-react/releases/tag/v0.7.15) 2019-12-30
+
+- Added the following props on the `Thread` component so the underlying MessageList, MessageInput and Message components can be customized using props:
+  - `additionalParentMessageProps`
+  - `additionalMessageListProps`
+  - `additionalMessageInputProps`
+- Added the following props to the `Channel` component:
+  - `doUpdateMessageRequest` to override the update(edit) message request (Advanced usage only)
+  - `doSendMessageRequest` to override the send message request (Advanced usage only)
+
+## [0.7.13](https://github.com/GetStream/stream-chat-react/releases/tag/v0.7.13) 2019-12-03
+
+- Handling and updating channel list on `channel.truncated` and `channel.deleted` event.
+
+## [0.7.12](https://github.com/GetStream/stream-chat-react/releases/tag/v0.7.12) 2019-11-22
+
+- Adding prop `MessageSystem` to customize system messages
+
+## [0.7.11](https://github.com/GetStream/stream-chat-react/releases/tag/v0.7.11) 2019-11-05
+
+- Fixed z-index issue on MessageInputLarge component https://github.com/GetStream/stream-chat-react/commit/f78b0bf6566fe587da62a8162ab5f1b3d799a10e
+
+## [0.7.10](https://github.com/GetStream/stream-chat-react/releases/tag/v0.7.10) 2019-10-16
+
+- Added `customActiveChannel` prop on `ChannelList` to specify a custom channel to be moved to the top and set to active upon mounting.
+
+## [0.7.9](https://github.com/GetStream/stream-chat-react/releases/tag/v0.7.9) 2019-10-16
+
+- Changing prop name for MessageSimple from openThread to handleOpenThread.
+- Fixing scroll issue on messagelist. Related to issue [#67](https://github.com/GetStream/stream-chat-react/issues/67)
+
+## [0.7.8](https://github.com/GetStream/stream-chat-react/releases/tag/v0.7.8) 2019-10-11
+
+- Bug fix with dateseperator in messagelist
+
+## [0.7.7](https://github.com/GetStream/stream-chat-react/releases/tag/v0.7.7) 2019-10-11
+
+- Adding intro message to messagelist
+
 ## [0.7.6](https://github.com/GetStream/stream-chat-react/releases/tag/v0.7.6) 2019-10-08
 
 - Fixed unbinding of visibility listener

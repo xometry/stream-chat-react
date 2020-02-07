@@ -14,6 +14,8 @@ import { KEY_CODES } from './AutoCompleteTextarea';
 import deepequal from 'deep-equal';
 import { MESSAGE_ACTIONS } from '../utils';
 
+/* eslint sonarjs/no-duplicate-string: 0 */
+
 /**
  * MessageList - The message list components renders a list of messages. Its a consumer of [Channel Context](https://getstream.github.io/stream-chat-react/#channel)
  *
@@ -107,6 +109,12 @@ class MessageList extends PureComponent {
     /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
     Message: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
     /**
+     * Custom UI component to display system messages.
+     *
+     * Defaults to and accepts same props as: [EventComponent](https://github.com/GetStream/stream-chat-react/blob/master/src/components/EventComponent.js)
+     */
+    MessageSystem: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
+    /**
      * The UI Indicator to use when MessagerList or ChannelList is empty
      * */
     EmptyStateIndicator: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
@@ -138,10 +146,17 @@ class MessageList extends PureComponent {
     read: PropTypes.object,
     /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
     typing: PropTypes.object,
+    /**
+     * Additional props for underlying MessageInput component. We have instance of MessageInput
+     * component in MessageSimple component, for handling edit state.
+     * Available props - https://getstream.github.io/stream-chat-react/#messageinput
+     * */
+    additionalMessageInputProps: PropTypes.object,
   };
 
   static defaultProps = {
     Message: MessageSimple,
+    MessageSystem: EventComponent,
     threadList: false,
     Attachment,
     dateSeparator: DateSeparator,
@@ -192,8 +207,10 @@ class MessageList extends PureComponent {
       !deepequal(this.props.eventHistory, prevProps.eventHistory)
     ) {
       const list = this.messageList.current;
-      const pos = list.scrollHeight - list.scrollTop;
-      return pos;
+      return {
+        offsetTop: list.scrollTop,
+        offsetBottom: list.scrollHeight - list.scrollTop,
+      };
     }
     return null;
   }
@@ -202,39 +219,7 @@ class MessageList extends PureComponent {
     // If we have a snapshot value, we've just added new items.
     // Adjust scroll so these new items don't push the old ones out of view.
     // (snapshot here is the value returned from getSnapshotBeforeUpdate)
-
-    if (snapshot !== null) {
-      const list = this.messageList.current;
-
-      // const scrollDown = () => {
-      //   list.scrollTop = list.scrollHeight - snapshot;
-      // };
-      // scrollDown();
-      // setTimeout(scrollDown, 100);
-
-      this.scrollToTarget(
-        list.scrollHeight - snapshot,
-        this.messageList.current,
-      );
-
-      // scroll down after images load again
-      if (
-        this.props.messages.length > 0 &&
-        this.props.messages[this.props.messages.length - 1].user.id !==
-          this.props.client.user.id
-      ) {
-        setTimeout(
-          () =>
-            this.scrollToTarget(
-              list.scrollHeight - snapshot,
-              this.messageList.current,
-            ),
-          100,
-        );
-      }
-    }
-
-    // handle new messages being sent/received
+    const userScrolledUp = this.userScrolledUp();
     const currentLastMessage = this.props.messages[
       this.props.messages.length - 1
     ];
@@ -245,34 +230,43 @@ class MessageList extends PureComponent {
     }
 
     const hasNewMessage = currentLastMessage.id !== previousLastMessage.id;
-    const userScrolledUp = this.userScrolledUp();
     const isOwner = currentLastMessage.user.id === this.props.client.userID;
 
-    let scrollToBottom = false;
+    const list = this.messageList.current;
 
     // always scroll down when it's your own message that you added...
-    if (hasNewMessage && isOwner) {
-      scrollToBottom = true;
-    } else if (hasNewMessage && !userScrolledUp) {
-      scrollToBottom = true;
-    }
+    const scrollToBottom = hasNewMessage && (isOwner || !userScrolledUp);
 
     if (scrollToBottom) {
       this.scrollToBottom();
+      // Scroll further once attachments are laoded.
+      setTimeout(this.scrollToBottom, 100);
+
+      // remove the scroll notification if we already scrolled down...
+      this.state.newMessagesNotification &&
+        this.setState({ newMessagesNotification: false });
+
+      return;
+    }
+
+    if (snapshot !== null) {
+      // Maintain the offsetTop of scroll so that content in viewport doesn't move.
+      // This is for the case where user has scroll up significantly and a new message arrives from someone.
+      if (hasNewMessage) {
+        this.scrollToTarget(snapshot.offsetTop, this.messageList.current);
+      } else {
+        // Maintain the bottomOffset of scroll.
+        // This is for the case of pagination, when more messages get loaded.
+        this.scrollToTarget(
+          list.scrollHeight - snapshot.offsetBottom,
+          this.messageList.current,
+        );
+      }
     }
 
     // Check the scroll position... if you're scrolled up show a little notification
-    if (
-      !scrollToBottom &&
-      hasNewMessage &&
-      !this.state.newMessagesNotification
-    ) {
+    if (hasNewMessage && !this.state.newMessagesNotification) {
       this.setState({ newMessagesNotification: true });
-    }
-
-    // remove the scroll notification if we already scrolled down...
-    if (scrollToBottom && this.state.newMessagesNotification) {
-      this.setState({ newMessagesNotification: false });
     }
   }
 
@@ -326,7 +320,7 @@ class MessageList extends PureComponent {
   };
 
   clearEditingState = (e) => {
-    if (e) {
+    if (e && e.preventDefault) {
       e.preventDefault();
     }
     this.setState({
@@ -347,12 +341,7 @@ class MessageList extends PureComponent {
         prevMessageDate = messages[i - 1].created_at.getDay();
       }
 
-      if (i === 0) {
-        newMessages.push(
-          { type: 'message.date', date: message.created_at },
-          message,
-        );
-      } else if (messageDate !== prevMessageDate) {
+      if (i === 0 || messageDate !== prevMessageDate) {
         newMessages.push(
           { type: 'message.date', date: message.created_at },
           message,
@@ -466,7 +455,6 @@ class MessageList extends PureComponent {
 
   listenToScroll = (offset) => {
     this.scrollOffset = offset;
-
     if (this.state.newMessagesNotification && !this.userScrolledUp()) {
       this.setState({
         newMessagesNotification: false,
@@ -640,23 +628,25 @@ class MessageList extends PureComponent {
       ? this.props.loadMore(this.props.messageLimit)
       : this.props.loadMore();
 
+  // eslint-disable-next-line
   render() {
     let allMessages = [...this.props.messages];
-
+    const MessageSystem = this.props.MessageSystem;
     allMessages = this.insertDates(allMessages);
     if (this.props.HeaderComponent) {
       allMessages = this.insertIntro(allMessages);
     }
     const messageGroupStyles = this.getGroupStyles(allMessages);
 
-    const TypingIndicator = this.props.TypingIndicator;
-    const DateSeparator = this.props.dateSeparator;
-    const HeaderComponent = this.props.HeaderComponent;
+    const {
+      TypingIndicator,
+      dateSeparator: DateSeparator,
+      HeaderComponent,
+      EmptyStateIndicator,
+    } = this.props;
 
     // sort by date
-    allMessages.sort(function(a, b) {
-      return a.created_at - b.created_at;
-    });
+    allMessages.sort((a, b) => a.created_at - b.created_at);
 
     // get the readData
     const readData = this.getReadStates(allMessages);
@@ -689,19 +679,20 @@ class MessageList extends PureComponent {
         message.type === 'channel.event' ||
         message.type === 'system'
       ) {
-        elements.push(
-          <li
-            key={
-              message.type === 'system'
-                ? message.created_at
-                : message.type === 'channel.event'
-                ? message.event.created_at
-                : ''
-            }
-          >
-            <EventComponent message={message} />
-          </li>,
-        );
+        MessageSystem &&
+          elements.push(
+            <li
+              key={
+                message.type === 'system'
+                  ? message.created_at
+                  : message.type === 'channel.event'
+                  ? message.event.created_at
+                  : ''
+              }
+            >
+              <MessageSystem message={message} />
+            </li>,
+          );
       } else if (message.type !== 'message.read') {
         let groupStyles = messageGroupStyles[message.id];
         if (!groupStyles) {
@@ -744,6 +735,9 @@ class MessageList extends PureComponent {
               onMentionsClick={this.props.onMentionsClick}
               onMentionsHover={this.props.onMentionsHover}
               messageActions={this.props.messageActions}
+              additionalMessageInputProps={
+                this.props.additionalMessageInputProps
+              }
               getFlagMessageSuccessNotification={
                 this.props.getFlagMessageSuccessNotification
               }
@@ -826,9 +820,7 @@ MessageList = withChannelContext(MessageList);
 export { MessageList };
 
 const Center = ({ children }) => (
-  <div style={{ width: 100 + '%', display: 'flex', justifyContent: 'center' }}>
-    {children}
-  </div>
+  <div className="str-chat__list__center">{children}</div>
 );
 
 const Notification = ({ children, active, type }) => {
