@@ -110,6 +110,8 @@ class Channel extends PureComponent {
   };
 
   render() {
+    console.log('xometry/stream-chat-react, Channel.render().============================================');
+
     if (!this.props.channel.cid) {
       return null; // <div>Select a channel</div>;
     }
