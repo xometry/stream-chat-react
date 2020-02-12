@@ -94,6 +94,8 @@ class MessageInput extends PureComponent {
     disabled: PropTypes.bool.isRequired,
     /** Grow the textarea while you're typing */
     grow: PropTypes.bool.isRequired,
+    /** Set the maximum number of rows */
+    maxRows: PropTypes.number.isRequired,
     /** Via Context: the channel that we're sending the message to */
     channel: PropTypes.object.isRequired,
     /** Via Context: the users currently typing, passed from the Channel component */
@@ -134,6 +136,7 @@ class MessageInput extends PureComponent {
     focus: false,
     disabled: false,
     grow: true,
+    maxRows: 10,
     Input: MessageInputLarge,
     SendButton,
   };
@@ -210,11 +213,7 @@ class MessageInput extends PureComponent {
     textareaElement.selectionEnd = newCursorPosition;
   };
 
-  getCommands = () => {
-    const config = this.props.channel.getConfig();
-    const allCommands = config.commands;
-    return allCommands;
-  };
+  getCommands = () => this.props.channel.getConfig().commands;
 
   getUsers = () => {
     const users = [];
@@ -237,8 +236,7 @@ class MessageInput extends PureComponent {
         userMap[user.id] = user;
       }
     }
-    const usersArray = Object.values(userMap);
-    return usersArray;
+    return Object.values(userMap);
   };
 
   handleChange = (event) => {
@@ -278,6 +276,9 @@ class MessageInput extends PureComponent {
     const text = this.state.text;
     // the channel component handles the actual sending of the message
     const attachments = [...this.state.attachments];
+    if (this.props.message && this.props.message.attachments) {
+      attachments.push(...this.props.message.attachments);
+    }
     for (const id of this.state.imageOrder) {
       const image = this.state.imageUploads[id];
       if (!image || image.state === 'failed') {
@@ -287,6 +288,10 @@ class MessageInput extends PureComponent {
         // TODO: show error to user that they should wait until image is uploaded
         return;
       }
+      const dupe = attachments.filter(
+        (attach) => image.url === attach.image_url,
+      );
+      if (dupe.length >= 1) continue;
       attachments.push({
         type: 'image',
         image_url: image.url,
@@ -320,12 +325,32 @@ class MessageInput extends PureComponent {
       // TODO: Remove this line and show an error when submit fails
       this.props.clearEditingState();
 
-      const updateMessagePromise = this.props.client
-        .updateMessage(updatedMessage)
-        .then(() => {
-          this.props.clearEditingState();
-        });
+      const updateMessagePromise = this.props
+        .editMessage(updatedMessage)
+        .then(this.props.clearEditingState);
+
       logChatPromiseExecution(updateMessagePromise, 'update message');
+    } else if (
+      this.props.overrideSubmitHandler &&
+      typeof this.props.overrideSubmitHandler === 'function'
+    ) {
+      this.props.overrideSubmitHandler(
+        {
+          text,
+          attachments,
+          mentioned_users: uniq(this.state.mentioned_users),
+          parent: this.props.parent,
+        },
+        this.props.channel.cid,
+      );
+      this.setState({
+        text: '',
+        mentioned_users: [],
+        imageUploads: Immutable({}),
+        imageOrder: [],
+        fileUploads: Immutable({}),
+        fileOrder: [],
+      });
     } else {
       const sendMessagePromise = this.props.sendMessage({
         text,

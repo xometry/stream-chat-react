@@ -1,6 +1,12 @@
 import * as React from 'react';
+import PropTypes from 'prop-types';
 
 export class Audio extends React.Component {
+  static propTypes = {
+    /** Attachment object of audio type */
+    og: PropTypes.object,
+  };
+
   constructor(props) {
     super(props);
     this.state = {
@@ -51,12 +57,6 @@ export class Audio extends React.Component {
     window.clearInterval(this.state.updateProgress);
   }
 
-  _handleClose = (e) => {
-    if (this.props.handleClose) {
-      this.props.handleClose(e);
-    }
-  };
-
   render() {
     const { og } = this.props;
     const audio = og;
@@ -66,14 +66,7 @@ export class Audio extends React.Component {
       <div className="str-chat__audio">
         <div className="str-chat__audio__wrapper">
           <audio ref={this.audioRef}>
-            <source
-              src={url}
-              type={
-                audio.type === 'audio/vnd.facebook.bridge'
-                  ? 'audio/mp3'
-                  : 'audio/mp3'
-              }
-            />
+            <source src={url} type="audio/mp3" />
           </audio>
           <div className="str-chat__audio__image">
             <div className="str-chat__audio__image--overlay">

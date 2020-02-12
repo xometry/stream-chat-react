@@ -7,10 +7,15 @@ import PropTypes from 'prop-types';
 
 import { Message } from './Message';
 import { MessageInputSmall } from './MessageInputSmall';
+import { smartRender } from '../utils';
 
 /**
  * Thread - The Thread renders a parent message with a list of replies. Use the standard message list of the main channel's messages.
  * The thread is only used for the list of replies to a message.
+ * Underlying MessageList, MessageInput and Message components can be customized using props:
+ * - additionalParentMessageProps
+ * - additionalMessageListProps
+ * - additionalMessageInputProps
  *
  * @example ./docs/Thread.md
  * @extends Component
@@ -49,6 +54,23 @@ class Thread extends React.PureComponent {
      * **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)**
      * If the thread is currently loading more messages. This is helpful to display a loading indicator on threadlist */
     threadLoadingMore: PropTypes.bool,
+    /**
+     * Additional props for underlying Message component of parent message at the top.
+     * Available props - https://getstream.github.io/stream-chat-react/#message
+     * */
+    additionalParentMessageProps: PropTypes.object,
+    /**
+     * Additional props for underlying MessageList component.
+     * Available props - https://getstream.github.io/stream-chat-react/#messagelist
+     * */
+    additionalMessageListProps: PropTypes.object,
+    /**
+     * Additional props for underlying MessageInput component.
+     * Available props - https://getstream.github.io/stream-chat-react/#messageinput
+     * */
+    additionalMessageInputProps: PropTypes.object,
+    /** Customized MessageInput component to used within Thread instead of default MessageInput */
+    MessageInput: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
   };
 
   static defaultProps = {
@@ -56,6 +78,7 @@ class Thread extends React.PureComponent {
     threadLoadingMore: true,
     fullWidth: false,
     autoFocus: true,
+    MessageInput,
   };
 
   render() {
@@ -96,8 +119,7 @@ class ThreadInner extends React.PureComponent {
     // Capture the scroll position so we can adjust scroll later.
     if (prevProps.threadMessages.length < this.props.threadMessages.length) {
       const list = this.messageList.current;
-      const pos = list.scrollHeight - list.scrollTop;
-      return pos;
+      return list.scrollHeight - list.scrollTop;
     }
     return null;
   }
@@ -162,7 +184,9 @@ class ThreadInner extends React.PureComponent {
             initialMessage
             threadList
             Message={this.props.Message}
+            // TODO: remove the following line in next release, since we already have additionalParentMessageProps now.
             {...this.props}
+            {...this.props.additionalParentMessageProps}
           />
           <div className="str-chat__thread-start">Start of a new thread</div>
           <MessageList
@@ -173,12 +197,14 @@ class ThreadInner extends React.PureComponent {
             hasMore={this.props.threadHasMore}
             loadingMore={this.props.threadLoadingMore}
             Message={this.props.Message}
+            {...this.props.additionalMessageListProps}
           />
-          <MessageInput
-            Input={MessageInputSmall}
-            parent={this.props.thread}
-            focus={this.props.autoFocus}
-          />
+          {smartRender(this.props.MessageInput, {
+            MessageInputSmall,
+            parent: this.props.thread,
+            focus: this.props.autoFocus,
+            ...this.props.additionalMessageInputProps,
+          })}
         </div>
       </div>
     );

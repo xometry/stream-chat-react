@@ -55,14 +55,17 @@ export class MessageSimple extends PureComponent {
     /** If component is in thread list */
     threadList: PropTypes.bool,
     /** Function to open thread on current messxage */
-    openThread: PropTypes.func,
+    handleOpenThread: PropTypes.func,
     /** If the message is in edit state */
     editing: PropTypes.bool,
     /** Function to exit edit state */
     clearEditingState: PropTypes.func,
     /** Returns true if message belongs to current user */
     isMyMessage: PropTypes.func,
-    /** Returns all allowed actions on message by current user e.g., [edit, delete, flag, mute] */
+    /**
+     * Returns all allowed actions on message by current user e.g., [edit, delete, flag, mute]
+     * Please check [Message](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Message.js) component for default implementation.
+     * */
     getMessageActions: PropTypes.func,
     /**
      * Function to publish updates on message to channel
@@ -108,6 +111,11 @@ export class MessageSimple extends PureComponent {
      * @param user Target user object
      */
     onMentionsClickMessage: PropTypes.func,
+    /**
+     * Additional props for underlying MessageInput component.
+     * Available props - https://getstream.github.io/stream-chat-react/#messageinput
+     * */
+    additionalMessageInputProps: PropTypes.object,
   };
 
   static defaultProps = {
@@ -315,7 +323,7 @@ export class MessageSimple extends PureComponent {
       initialMessage,
       channelConfig,
       threadList,
-      openThread,
+      handleOpenThread,
     } = this.props;
     if (
       message.type === 'error' ||
@@ -333,7 +341,7 @@ export class MessageSimple extends PureComponent {
           {this.renderMessageActions()}
           {!threadList && channelConfig && channelConfig.replies && (
             <div
-              onClick={openThread}
+              onClick={handleOpenThread}
               className="str-chat__message-simple__actions__action str-chat__message-simple__actions__action--thread"
             >
               <svg width="14" height="10" xmlns="http://www.w3.org/2000/svg">
@@ -382,7 +390,7 @@ export class MessageSimple extends PureComponent {
           )}
           {!threadList && channelConfig && channelConfig.replies && (
             <div
-              onClick={openThread}
+              onClick={handleOpenThread}
               className="str-chat__message-simple__actions__action str-chat__message-simple__actions__action--thread"
             >
               <svg width="14" height="10" xmlns="http://www.w3.org/2000/svg">
@@ -399,6 +407,7 @@ export class MessageSimple extends PureComponent {
     }
   }
 
+  // eslint-disable-next-line
   render() {
     const {
       message,
@@ -415,7 +424,7 @@ export class MessageSimple extends PureComponent {
       onMentionsClickMessage,
       unsafeHTML,
       threadList,
-      openThread,
+      handleOpenThread,
     } = this.props;
 
     const when = moment(message.created_at).calendar();
@@ -462,6 +471,7 @@ export class MessageSimple extends PureComponent {
               message={message}
               clearEditingState={clearEditingState}
               updateMessage={updateMessage}
+              {...this.props.additionalMessageInputProps}
             />
           </Modal>
         )}
@@ -596,7 +606,7 @@ export class MessageSimple extends PureComponent {
             {!threadList && message.reply_count !== 0 && (
               <div className="str-chat__message-simple-reply-button">
                 <MessageRepliesCountButton
-                  onClick={openThread}
+                  onClick={handleOpenThread}
                   reply_count={message.reply_count}
                 />
               </div>

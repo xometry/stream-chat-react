@@ -59,14 +59,17 @@ export class MessageLivestream extends React.PureComponent {
     /** If component is in thread list */
     threadList: PropTypes.bool,
     /** Function to open thread on current messxage */
-    openThread: PropTypes.func,
+    handleOpenThread: PropTypes.func,
     /** If the message is in edit state */
     editing: PropTypes.bool,
     /** Function to exit edit state */
     clearEditingState: PropTypes.func,
     /** Returns true if message belongs to current user */
     isMyMessage: PropTypes.func,
-    /** Returns all allowed actions on message by current user e.g., [edit, delete, flag, mute] */
+    /**
+     * Returns all allowed actions on message by current user e.g., [edit, delete, flag, mute]
+     * Please check [Message](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Message.js) component for default implementation.
+     * */
     getMessageActions: PropTypes.func,
     /**
      * Function to publish updates on message to channel
@@ -197,7 +200,7 @@ export class MessageLivestream extends React.PureComponent {
       messageListRect,
       channelConfig,
       threadList,
-      openThread,
+      handleOpenThread,
       Message,
       onMentionsHoverMessage,
       onMentionsClickMessage,
@@ -240,9 +243,7 @@ export class MessageLivestream extends React.PureComponent {
     if (editing) {
       return (
         <div
-          className={`str-chat__message-team str-chat__message-team--${
-            groupStyles[0]
-          } str-chat__message-team--editing`}
+          className={`str-chat__message-team str-chat__message-team--${groupStyles[0]} str-chat__message-team--editing`}
           onMouseLeave={this.onMouseLeaveMessage}
         >
           {(groupStyles[0] === 'top' || groupStyles[0] === 'single') && (
@@ -314,7 +315,7 @@ export class MessageLivestream extends React.PureComponent {
                     dangerouslySetInnerHTML={{
                       __html: threadSvg,
                     }}
-                    onClick={(e) => openThread(e, message)}
+                    onClick={(e) => handleOpenThread(e, message)}
                   />
                 )}
                 {getMessageActions().length > 0 && (
@@ -449,7 +450,7 @@ export class MessageLivestream extends React.PureComponent {
 
               {!initialMessage && (
                 <MessageRepliesCountButton
-                  onClick={openThread}
+                  onClick={handleOpenThread}
                   reply_count={message.reply_count}
                 />
               )}

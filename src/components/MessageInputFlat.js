@@ -77,6 +77,12 @@ export class MessageInputFlat extends PureComponent {
     maxNumberOfFiles: PropTypes.object,
     /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
     acceptedFiles: PropTypes.object,
+    /**
+     * Custom UI component for send button.
+     *
+     * Defaults to and accepts same props as: [SendButton](https://getstream.github.io/stream-chat-react/#sendbutton)
+     * */
+    SendButton: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
   };
 
   static defaultProps = {
@@ -140,7 +146,6 @@ export class MessageInputFlat extends PureComponent {
         className={`str-chat__input-flat ${
           SendButton ? 'str-chat__input-flat--send-button-active' : null
         }`}
-        style={{ position: 'relative', zIndex: 1, width: '100%' }}
       >
         <ImageDropzone
           accept={this.props.acceptedFiles}
@@ -162,6 +167,7 @@ export class MessageInputFlat extends PureComponent {
                 onChange={this.props.handleChange}
                 value={this.props.text}
                 rows={1}
+                maxRows={this.props.maxRows}
                 placeholder="Type your message"
                 onPaste={this.props.onPaste}
                 grow={this.props.grow}

@@ -88,6 +88,18 @@ class Channel extends PureComponent {
     acceptedFiles: PropTypes.array,
     /** Maximum number of attachments allowed per message */
     maxNumberOfFiles: PropTypes.number,
+    /** Override send message request (Advanced usage only)
+     *
+     * @param {String} channelId full channel ID in format of `type:id`
+     * @param {Object} message
+     */
+    doSendMessageRequest: PropTypes.func,
+    /** Override update(edit) message request (Advanced usage only)
+     *
+     * @param {String} channelId full channel ID in format of `type:id`
+     * @param {Object} updatedMessage
+     */
+    doUpdateMessageRequest: PropTypes.func,
   };
 
   static defaultProps = {
@@ -345,6 +357,19 @@ class ChannelInner extends PureComponent {
     return message;
   };
 
+  editMessage = (updatedMessage) => {
+    if (this.props.doUpdateMessageRequest) {
+      return Promise.resolve(
+        this.props.doUpdateMessageRequest(
+          this.props.channel.cid,
+          updatedMessage,
+        ),
+      );
+    }
+
+    return this.props.client.updateMessage(updatedMessage);
+  };
+
   _sendMessage = async (message) => {
     const { text, attachments, id, parent_id, mentioned_users } = message;
     const messageData = {
@@ -356,7 +381,16 @@ class ChannelInner extends PureComponent {
     };
 
     try {
-      const messageResponse = await this.props.channel.sendMessage(messageData);
+      let messageResponse;
+      if (this.props.doSendMessageRequest) {
+        messageResponse = await this.props.doSendMessageRequest(
+          this.props.channel.cid,
+          messageData,
+        );
+      } else {
+        messageResponse = await this.props.channel.sendMessage(messageData);
+      }
+
       // replace it after send is completed
       if (messageResponse.message) {
         messageResponse.message.status = 'received';
@@ -597,6 +631,7 @@ class ChannelInner extends PureComponent {
     updateMessage: this.updateMessage,
     removeMessage: this.removeMessage,
     sendMessage: this.sendMessage,
+    editMessage: this.editMessage,
     retrySendMessage: this.retrySendMessage,
     loadMore: this.loadMore,
 

@@ -12,6 +12,7 @@ import { withChatContext } from '../context';
 import { ChannelListTeam } from './ChannelListTeam';
 import { smartRender } from '../utils';
 import uniqBy from 'lodash.uniqby';
+import deepequal from 'deep-equal';
 
 /**
  * ChannelList - A preview list of channels, allowing you to select the channel you want to open
@@ -106,6 +107,20 @@ class ChannelList extends PureComponent {
      * */
     onChannelUpdated: PropTypes.func,
     /**
+     * Function to customize behaviour when channel gets truncated
+     *
+     * @param {Component} thisArg Reference to ChannelList component
+     * @param {Event} event       [Event object](https://getstream.io/chat/docs/#event_object) corresponding to `channel.truncated` event
+     * */
+    onChannelTruncated: PropTypes.func,
+    /**
+     * Function that overrides default behaviour when channel gets deleted. In absence of this prop, channel will be removed from the list.
+     *
+     * @param {Component} thisArg Reference to ChannelList component
+     * @param {Event} event       [Event object](https://getstream.io/chat/docs/#event_object) corresponding to `channel.deleted` event
+     * */
+    onChannelDeleted: PropTypes.func,
+    /**
      * Object containing query filters
      * @see See [Channel query documentation](https://getstream.io/chat/docs/#query_channels) for a list of available fields for filter.
      * */
@@ -125,6 +140,14 @@ class ChannelList extends PureComponent {
      * @see See [Pagination documentation](https://getstream.io/chat/docs/#channel_pagination) for a list of available fields for sort.
      * */
     watchers: PropTypes.object,
+    /**
+     * Set a Channel to be active and move it to the top of the list of channels by ID.
+     * */
+    customAciveChannel: PropTypes.string,
+    /**
+     * If true, channels won't be dynamically sorted by most recent message.
+     */
+    lockChannelOrder: PropTypes.bool,
   };
 
   static defaultProps = {
@@ -171,6 +194,18 @@ class ChannelList extends PureComponent {
     this.listenToChanges();
   }
 
+  async componentDidUpdate(prevProps) {
+    if (!deepequal(prevProps.filters, this.props.filters)) {
+      await this.setState({
+        offset: 0,
+        channels: Immutable([]),
+        loadingChannels: true,
+        refreshing: false,
+      });
+      await this.queryChannels();
+    }
+  }
+
   componentWillUnmount() {
     this.props.client.off(this.handleEvent);
   }
@@ -195,15 +230,10 @@ class ChannelList extends PureComponent {
       let channelQueryResponse = channelPromise;
       if (isPromise(channelQueryResponse)) {
         channelQueryResponse = await channelPromise;
-        if (offset === 0 && channelQueryResponse.length >= 1) {
-          this.props.setActiveChannel(
-            channelQueryResponse[0],
-            this.props.watchers,
-          );
-        }
       }
       this.setState((prevState) => {
         const channels = [...prevState.channels, ...channelQueryResponse];
+
         return {
           channels, // not unique somehow needs more checking
           loadingChannels: false,
@@ -213,6 +243,22 @@ class ChannelList extends PureComponent {
           refreshing: false,
         };
       });
+
+      // Set a channel as active and move it to the top of the list.
+      if (this.props.customActiveChannel) {
+        const customActiveChannel = channelQueryResponse.filter(
+          (channel) => channel.id === this.props.customActiveChannel,
+        )[0];
+        if (customActiveChannel) {
+          this.props.setActiveChannel(customActiveChannel, this.props.watchers);
+          this.moveChannelUp(customActiveChannel.cid);
+        }
+      } else if (offset === 0 && this.state.channels.length >= 1) {
+        this.props.setActiveChannel(
+          this.state.channels[0],
+          this.props.watchers,
+        );
+      }
     } catch (e) {
       console.warn(e);
       this.setState({ error: true, refreshing: false });
@@ -223,6 +269,7 @@ class ChannelList extends PureComponent {
     this.props.client.on(this.handleEvent);
   }
 
+  // eslint-disable-next-line sonarjs/cognitive-complexity
   handleEvent = async (e) => {
     if (e.type === 'user.presence.changed') {
       let newChannels = this.state.channels;
@@ -239,7 +286,7 @@ class ChannelList extends PureComponent {
     }
 
     if (e.type === 'message.new') {
-      this.moveChannelUp(e.cid);
+      !this.props.lockChannelOrder && this.moveChannelUp(e.cid);
     }
 
     // make sure to re-render the channel list after connection is recovered
@@ -322,6 +369,40 @@ class ChannelList extends PureComponent {
       }
     }
 
+    // Channel is deleted
+    if (e.type === 'channel.deleted') {
+      if (
+        this.props.onChannelDeleted &&
+        typeof this.props.onChannelDeleted === 'function'
+      ) {
+        this.props.onChannelDeleted(this, e);
+      } else {
+        const channels = this.state.channels;
+        const channelIndex = channels.findIndex(
+          (channel) => channel.cid === e.channel.cid,
+        );
+        // Remove the deleted channel from the list.s
+        channels.splice(channelIndex, 1);
+        this.setState({
+          channels: [...channels],
+          channelUpdateCount: this.state.channelUpdateCount + 1,
+        });
+      }
+    }
+
+    if (e.type === 'channel.truncated') {
+      this.setState((prevState) => ({
+        channels: [...prevState.channels],
+        channelUpdateCount: prevState.channelUpdateCount + 1,
+      }));
+
+      if (
+        this.props.onChannelTruncated &&
+        typeof this.props.onChannelTruncated === 'function'
+      )
+        this.props.onChannelTruncated(this, e);
+    }
+
     return null;
   };
 
@@ -333,7 +414,6 @@ class ChannelList extends PureComponent {
 
   moveChannelUp = (cid) => {
     const channels = this.state.channels;
-
     // get channel index
     const channelIndex = this.state.channels.findIndex(
       (channel) => channel.cid === cid,
