@@ -20,7 +20,7 @@
     "getstream.io"
   ],
   "dependencies": {
-    "@braintree/sanitize-url": "^4.0.0",
+    "@braintree/sanitize-url": "^6.0.1",
     "@webscopeio/react-textarea-autocomplete": "^4.6.3",
     "anchorme": "^1.1.2",
     "deep-equal": "^2.0.1",
