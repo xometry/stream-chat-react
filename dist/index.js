@@ -4,6 +4,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
+var _extends = _interopDefault(require('@babel/runtime/helpers/extends'));
 var _classCallCheck = _interopDefault(require('@babel/runtime/helpers/classCallCheck'));
 var _createClass = _interopDefault(require('@babel/runtime/helpers/createClass'));
 var _possibleConstructorReturn = _interopDefault(require('@babel/runtime/helpers/possibleConstructorReturn'));
@@ -13,38 +14,676 @@ var _inherits = _interopDefault(require('@babel/runtime/helpers/inherits'));
 var _defineProperty = _interopDefault(require('@babel/runtime/helpers/defineProperty'));
 var React = require('react');
 var React__default = _interopDefault(React);
+var ReactPlayer = _interopDefault(require('react-player'));
 var PropTypes = _interopDefault(require('prop-types'));
-var _extends = _interopDefault(require('@babel/runtime/helpers/extends'));
+var sanitizeUrl = require('@braintree/sanitize-url');
+var Carousel = require('react-images');
+var Carousel__default = _interopDefault(Carousel);
+var reactFileUtils = require('react-file-utils');
+var prettybytes = _interopDefault(require('pretty-bytes'));
 var _toConsumableArray = _interopDefault(require('@babel/runtime/helpers/toConsumableArray'));
 var _regeneratorRuntime = _interopDefault(require('@babel/runtime/regenerator'));
 var _asyncToGenerator = _interopDefault(require('@babel/runtime/helpers/asyncToGenerator'));
-var ReactPlayer = _interopDefault(require('react-player'));
-var sanitizeUrl = require('@braintree/sanitize-url');
-var Lightbox = _interopDefault(require('react-images'));
-var reactFileUtils = require('react-file-utils');
-var prettybytes = _interopDefault(require('pretty-bytes'));
+var uuid = require('uuid');
+var Immutable = _interopDefault(require('seamless-immutable'));
+var Visibility = _interopDefault(require('visibilityjs'));
+var streamChat = require('stream-chat');
 var anchorme = _interopDefault(require('anchorme'));
 var emojiRegex = _interopDefault(require('emoji-regex'));
 var ReactMarkdown = _interopDefault(require('react-markdown/with-html'));
 var truncate = _interopDefault(require('lodash/truncate'));
 var data = _interopDefault(require('emoji-mart/data/all.json'));
 var emojiMart = require('emoji-mart');
-var _slicedToArray = _interopDefault(require('@babel/runtime/helpers/slicedToArray'));
 var _typeof = _interopDefault(require('@babel/runtime/helpers/typeof'));
+var _slicedToArray = _interopDefault(require('@babel/runtime/helpers/slicedToArray'));
 var getCaretCoordinates = _interopDefault(require('textarea-caret'));
 var CustomEvent = _interopDefault(require('custom-event'));
 var Textarea = _interopDefault(require('react-textarea-autosize'));
-var Immutable = _interopDefault(require('seamless-immutable'));
 var uniq = _interopDefault(require('lodash/uniq'));
-var streamChat = require('stream-chat');
 var moment = _interopDefault(require('moment'));
-var deepequal = _interopDefault(require('deep-equal'));
-var _objectWithoutProperties = _interopDefault(require('@babel/runtime/helpers/objectWithoutProperties'));
-var uuidv4 = _interopDefault(require('uuid/v4'));
-var Visibility = _interopDefault(require('visibilityjs'));
 var debounce = _interopDefault(require('lodash/debounce'));
 var throttle = _interopDefault(require('lodash/throttle'));
 var uniqBy = _interopDefault(require('lodash.uniqby'));
+var deepequal = _interopDefault(require('deep-equal'));
+var _objectWithoutProperties = _interopDefault(require('@babel/runtime/helpers/objectWithoutProperties'));
+
+/**
+ * SafeAnchor - In all ways similar to a regular anchor tag.
+ * The difference is that it sanitizes the href value and prevents XSS
+ * @extends PureComponent
+ */
+
+var SafeAnchor =
+/*#__PURE__*/
+function (_React$PureComponent) {
+  _inherits(SafeAnchor, _React$PureComponent);
+
+  function SafeAnchor() {
+    _classCallCheck(this, SafeAnchor);
+
+    return _possibleConstructorReturn(this, _getPrototypeOf(SafeAnchor).apply(this, arguments));
+  }
+
+  _createClass(SafeAnchor, [{
+    key: "render",
+    value: function render() {
+      var href = sanitizeUrl.sanitizeUrl(this.props.href);
+      return React__default.createElement("a", _extends({}, this.props, {
+        href: href
+      }), this.props.children);
+    }
+  }]);
+
+  return SafeAnchor;
+}(React__default.PureComponent);
+
+var giphyLogo = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAAAkCAYAAAB/up84AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAABVhJREFUeNrsW6GS20AMdToGBgEGAQYBBgEBBQYFgQcP5hMO9jP6CYWFBwsPBgYUGBQEFAQUGAQYBBgYGHjmutt5O6NupbXXcZJrx5rJXGyv11o96Ukr52avr6/BJG9HZmMBMpvNYnxt1JzNZNoRAYFxM2Z8rT6FuueMcaH6s1KfhBn3U42r1Jg1rrfq+Bt5xgf1Z64+uQFQndNzLc1Ydfwg6F2p6wd1PVXfU+b6Gc9vHGuh8+jrsXVN61Sq64XggNw95tlH9XmP6y3W2OI+qvN3db6mN7/zBFAb8L2aNMJxRsDQC6jIuEyN039LnAvV8QJKRRijZUHmT8iiLpEFDHKJaB1TGN732WuAokEIDQCwhwGjsMEIMNgp6qY9JlsTgyXquCFG1d54IsbOsKAVPLDBcQJjUxB0RJwAltGntNQ46GhzqPnb0y0954RG/1iLQ7SRCkR+guiPtW6GFRg5gAlCrFvbJEZ0ngDAUn0/Y77fDCJFXuiB/AmGDC3PLg0YWLRW5CcJWWPglNxDKS6C59AcZBs/sYxbOQBqHHkuZYCsGCds4SQJDDx3RK3RjUb9EfMUcLQ57BHS64MAIYtYkvEt+d4wCzqr++ipkoTtkihOI2chREfA5KiC0GOAaMig05zoWJPjgMk39jxcPphDR0mSDrtq438g51iq8omQlEnYJfHoiAFxYQGko6bCPSmZ5wS+TRx0Zc5R4CtmHbEVJT+0p1uOYdNE1SMfOKNO0zXWEmItptApsfYa1LV0UZUPIHSCmlRYJhfokNWhX5IcsmIWbEAMCQWerWirhZK57MghNQyzgke3QuQWPUv4EAac9wCuJjmkNmvUNEwiobX+DgdEWoQGgNDPGtTWWhRRWONX5JlnePCZhP1JUCOzPN1O0C2MohP7xuiko8Qy9INUDBg2YPJMlzP8pRv0qYeUdu+Cy+RAKIYmtVqojM5kkS0DwkXlLuY0ICzgAEOlAd8fPe+rYJdppz61TiZ5G4AgcScWz05RcUtAkOwyJMtI4FzNt3suCWKfwLUhdqRC0yA/enB1CZ4vBZ2fhIptJ4x/5PYVavyzQ39N0V8ddnsQ+m3sfX02hjo3bIVJ7d5PhqojZxYdC3NEdv9oQMQWFFjHHqpLEsc9BZyF23c9cG0ZOJjUIN15V1mY8OOAhW0E77yWaP2eoO9VBFG/d6yX6/xuHT2z3AsQ5ImnjrZBF6XcUiKAEl0RlJzZ7ZtnbxmqSgRqfxmyD9k6wNDGzuExecB3Z1/ukBOjQH73MZbspChFp9nQ/EYY9+LaaIYOqlo7JjwISX+LcBwbjAOz2ZKS7BpOcq0o0R2HvZAbHpHPJGc+dm00paQuedmOA4O0WD5fyQ4V08Ip4ATxhYl8CCh76/0QLVyehlBVFyCpYJTcKmPjHoY8XNE2VQ8dbIkdr4Z95npBwcNVahKzNEMBSYSyz46iLm8sLunreG5O+xYTsaMUHYu6bMn79sRCT2+8l6SMV2cCT5e3UspBXbbd9n3nDIN/Q1KP3JDfWLcd8kZwCVX12hjeOlmOIMe+L6FGjJLC4QS5rz6hg/tThjZiU0Pr/g7D65/uCUafKgaUJu0lHjvox/XsjXA+GAOQUogIXV8/v7GoKOGJfYuHxvHjt7t3rEMHD2+E5PoR+5GCLCS+8g6Z2xgGt6anuwGC99MSKAl6RrfUs/ofje+b1PcjlJBlMMk4gKBUe77AqKVP/T1Jj30IQPmCTdkm6NeKb5BkJzCGdCA8XuFGZIOWCBEh/mwGiZ/rFZXk3xHEdkjHb6MknVOhypJe+Sac03XlL4fe3r81mH518q9GyCS3kV8CDADlsrVaJhTLAgAAAABJRU5ErkJggg==";
+
+/**
+ * Card - Simple Card Layout
+ *
+ * @example ./docs/Card.md
+ * @extends PureComponent
+ */
+
+var Card =
+/*#__PURE__*/
+function (_React$PureComponent) {
+  _inherits(Card, _React$PureComponent);
+
+  function Card() {
+    var _getPrototypeOf2;
+
+    var _this;
+
+    _classCallCheck(this, Card);
+
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(Card)).call.apply(_getPrototypeOf2, [this].concat(args)));
+
+    _defineProperty(_assertThisInitialized(_this), "trimUrl", function (url) {
+      var trimmedUrl;
+
+      if (url !== undefined && url !== null) {
+        trimmedUrl = url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, '').split('/')[0];
+      }
+
+      return trimmedUrl;
+    });
+
+    return _this;
+  }
+
+  _createClass(Card, [{
+    key: "render",
+    value: function render() {
+      var _this$props = this.props,
+          title = _this$props.title,
+          title_link = _this$props.title_link,
+          text = _this$props.text,
+          type = _this$props.type,
+          image_url = _this$props.image_url,
+          thumb_url = _this$props.thumb_url,
+          og_scrape_url = _this$props.og_scrape_url;
+      var image = thumb_url || image_url;
+
+      if (!title && !title_link && !image) {
+        return React__default.createElement("div", {
+          className: "str-chat__message-attachment-card str-chat__message-attachment-card--".concat(type)
+        }, React__default.createElement("div", {
+          className: "str-chat__message-attachment-card--content"
+        }, React__default.createElement("div", {
+          className: "str-chat__message-attachment-card--text"
+        }, "this content could not be displayed")));
+      }
+
+      if (!title_link && !og_scrape_url) {
+        return null;
+      }
+
+      return React__default.createElement("div", {
+        className: "str-chat__message-attachment-card str-chat__message-attachment-card--".concat(type)
+      }, image && React__default.createElement("div", {
+        className: "str-chat__message-attachment-card--header"
+      }, React__default.createElement("img", {
+        src: image,
+        alt: image
+      })), React__default.createElement("div", {
+        className: "str-chat__message-attachment-card--content"
+      }, React__default.createElement("div", {
+        className: "str-chat__message-attachment-card--flex"
+      }, title && React__default.createElement("div", {
+        className: "str-chat__message-attachment-card--title"
+      }, title), text && React__default.createElement("div", {
+        className: "str-chat__message-attachment-card--text"
+      }, text), (title_link || og_scrape_url) && React__default.createElement(SafeAnchor, {
+        href: title_link || og_scrape_url,
+        target: "_blank",
+        rel: "noopener noreferrer",
+        className: "str-chat__message-attachment-card--url"
+      }, this.trimUrl(title_link || og_scrape_url))), type === 'giphy' && React__default.createElement("img", {
+        className: "str-chat__message-attachment-card__giphy-logo",
+        src: giphyLogo,
+        alt: "giphy logo"
+      })));
+    }
+  }]);
+
+  return Card;
+}(React__default.PureComponent);
+
+_defineProperty(Card, "propTypes", {
+  /** Title returned by the OG scraper */
+  title: PropTypes.string,
+
+  /** Link returned by the OG scraper */
+  title_link: PropTypes.string,
+
+  /** The scraped url, used as a fallback if the OG-data doesn't include a link */
+  og_scrape_url: PropTypes.string,
+
+  /** The url of the full sized image */
+  image_url: PropTypes.string,
+
+  /** The url for thumbnail sized image*/
+  thumb_url: PropTypes.string,
+
+  /** Description returned by the OG scraper */
+  text: PropTypes.string
+});
+
+/**
+ * Image - Small wrapper around an image tag, supports thumbnails
+ *
+ * @example ./docs/Image.md
+ * @extends PureComponent
+ */
+
+var Image =
+/*#__PURE__*/
+function (_React$PureComponent) {
+  _inherits(Image, _React$PureComponent);
+
+  function Image() {
+    var _getPrototypeOf2;
+
+    var _this;
+
+    _classCallCheck(this, Image);
+
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(Image)).call.apply(_getPrototypeOf2, [this].concat(args)));
+
+    _defineProperty(_assertThisInitialized(_this), "state", {
+      modalIsOpen: false,
+      currentIndex: 0
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "toggleModal", function () {
+      _this.setState(function (state) {
+        return {
+          modalIsOpen: !state.modalIsOpen
+        };
+      });
+    });
+
+    return _this;
+  }
+
+  _createClass(Image, [{
+    key: "render",
+    value: function render() {
+      var _this$props = this.props,
+          image_url = _this$props.image_url,
+          thumb_url = _this$props.thumb_url,
+          fallback = _this$props.fallback;
+      var formattedArray = [{
+        src: image_url || thumb_url
+      }];
+      return React__default.createElement(React__default.Fragment, null, React__default.createElement("img", {
+        className: "str-chat__message-attachment--img",
+        onClick: this.toggleModal,
+        src: thumb_url || image_url,
+        alt: fallback
+      }), React__default.createElement(Carousel.ModalGateway, null, this.state.modalIsOpen ? React__default.createElement(Carousel.Modal, {
+        onClose: this.toggleModal
+      }, React__default.createElement(Carousel__default, {
+        views: formattedArray
+      })) : null));
+    }
+  }]);
+
+  return Image;
+}(React__default.PureComponent);
+
+_defineProperty(Image, "propTypes", {
+  /** The full size image url */
+  image_url: PropTypes.string,
+
+  /** The thumb url */
+  thumb_url: PropTypes.string,
+
+  /** The text fallback for the image */
+  fallback: PropTypes.string
+});
+
+/**
+ * AttachmentActions - The actions you can take on an attachment
+ *
+ * @example ./docs/AttachmentActions.md
+ * @extends PureComponent
+ */
+
+var AttachmentActions =
+/*#__PURE__*/
+function (_React$PureComponent) {
+  _inherits(AttachmentActions, _React$PureComponent);
+
+  function AttachmentActions() {
+    _classCallCheck(this, AttachmentActions);
+
+    return _possibleConstructorReturn(this, _getPrototypeOf(AttachmentActions).apply(this, arguments));
+  }
+
+  _createClass(AttachmentActions, [{
+    key: "render",
+    value: function render() {
+      var _this = this;
+
+      var _this$props = this.props,
+          text = _this$props.text,
+          id = _this$props.id,
+          actions = _this$props.actions,
+          actionHandler = _this$props.actionHandler;
+      return React__default.createElement("div", {
+        className: "str-chat__message-attachment-actions"
+      }, React__default.createElement("form", {
+        className: "str-chat__message-attachment-actions-form"
+      }, React__default.createElement("span", {
+        key: 0
+      }, text), actions.map(function (action) {
+        return React__default.createElement("button", {
+          className: "str-chat__message-attachment-actions-button str-chat__message-attachment-actions-button--".concat(action.style),
+          key: "".concat(id, "-").concat(action.value),
+          "data-value": action.value,
+          onClick: actionHandler.bind(_this, action.name, action.value)
+        }, action.text);
+      })));
+    }
+  }]);
+
+  return AttachmentActions;
+}(React__default.PureComponent);
+
+_defineProperty(AttachmentActions, "propTypes", {
+  /** Unique id for action button key. Key is generated by concatenating this id with action value - {`${id}-${action.value}`} */
+  id: PropTypes.string.isRequired,
+
+  /** The text for the form input */
+  text: PropTypes.string,
+
+  /** A list of actions */
+  actions: PropTypes.array.isRequired,
+
+  /**
+   *
+   * Handler for actions. Actions in combination with attachments can be used to build [commands](https://getstream.io/chat/docs/#channel_commands).
+   *
+   * @param name {string} Name of action
+   * @param value {string} Value of action
+   * @param event Dom event that triggered this handler
+   */
+  actionHandler: PropTypes.func.isRequired
+});
+
+var Audio =
+/*#__PURE__*/
+function (_React$Component) {
+  _inherits(Audio, _React$Component);
+
+  function Audio(props) {
+    var _this;
+
+    _classCallCheck(this, Audio);
+
+    _this = _possibleConstructorReturn(this, _getPrototypeOf(Audio).call(this, props));
+
+    _defineProperty(_assertThisInitialized(_this), "playAudio", function () {
+      if (_this.audioRef.current !== null) {
+        _this.audioRef.current.pause();
+
+        _this.updateProgress();
+
+        _this.setState({
+          playing: true,
+          updateProgress: setInterval(_this.updateProgress, 500)
+        }); //$FlowFixMe
+
+
+        _this.audioRef.current.play();
+      }
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "pauseAudio", function () {
+      if (_this.audioRef.current !== null) {
+        _this.audioRef.current.pause();
+      }
+
+      _this.setState({
+        playing: false
+      });
+
+      window.clearInterval(_this.state.updateProgress);
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "updateProgress", function () {
+      if (_this.audioRef.current !== null) {
+        var position = _this.audioRef.current.currentTime;
+        var duration = _this.audioRef.current.duration;
+        var progress = 100 / duration * position;
+
+        _this.setState({
+          progress: progress
+        });
+
+        if (position === duration) {
+          _this.pauseAudio();
+        }
+      }
+    });
+
+    _this.state = {
+      open: false,
+      playing: false,
+      progress: 0,
+      updateProgress: null
+    };
+    _this.audioRef = React.createRef();
+    return _this;
+  }
+
+  _createClass(Audio, [{
+    key: "componentWillUnmount",
+    value: function componentWillUnmount() {
+      window.clearInterval(this.state.updateProgress);
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      var _this2 = this;
+
+      var og = this.props.og;
+      var url = og.asset_url;
+      var image = og.image_url;
+      return React.createElement("div", {
+        className: "str-chat__audio"
+      }, React.createElement("div", {
+        className: "str-chat__audio__wrapper"
+      }, React.createElement("audio", {
+        ref: this.audioRef
+      }, React.createElement("source", {
+        src: url,
+        type: "audio/mp3"
+      })), React.createElement("div", {
+        className: "str-chat__audio__image"
+      }, React.createElement("div", {
+        className: "str-chat__audio__image--overlay"
+      }, !this.state.playing ? React.createElement("div", {
+        onClick: function onClick() {
+          return _this2.playAudio();
+        },
+        className: "str-chat__audio__image--button"
+      }, React.createElement("svg", {
+        width: "40",
+        height: "40",
+        viewBox: "0 0 64 64",
+        xmlns: "http://www.w3.org/2000/svg"
+      }, React.createElement("path", {
+        d: "M32 58c14.36 0 26-11.64 26-26S46.36 6 32 6 6 17.64 6 32s11.64 26 26 26zm0 6C14.327 64 0 49.673 0 32 0 14.327 14.327 0 32 0c17.673 0 32 14.327 32 32 0 17.673-14.327 32-32 32zm13.237-28.412L26.135 45.625a3.27 3.27 0 0 1-4.426-1.4 3.319 3.319 0 0 1-.372-1.47L21 23.36c-.032-1.823 1.41-3.327 3.222-3.358a3.263 3.263 0 0 1 1.473.322l19.438 9.36a3.311 3.311 0 0 1 .103 5.905z",
+        fillRule: "nonzero"
+      }))) : React.createElement("div", {
+        onClick: function onClick() {
+          return _this2.pauseAudio();
+        },
+        className: "str-chat__audio__image--button"
+      }, React.createElement("svg", {
+        width: "40",
+        height: "40",
+        viewBox: "0 0 64 64",
+        xmlns: "http://www.w3.org/2000/svg"
+      }, React.createElement("path", {
+        d: "M32 58.215c14.478 0 26.215-11.737 26.215-26.215S46.478 5.785 32 5.785 5.785 17.522 5.785 32 17.522 58.215 32 58.215zM32 64C14.327 64 0 49.673 0 32 0 14.327 14.327 0 32 0c17.673 0 32 14.327 32 32 0 17.673-14.327 32-32 32zm-7.412-45.56h2.892a2.17 2.17 0 0 1 2.17 2.17v23.865a2.17 2.17 0 0 1-2.17 2.17h-2.892a2.17 2.17 0 0 1-2.17-2.17V20.61a2.17 2.17 0 0 1 2.17-2.17zm12.293 0h2.893a2.17 2.17 0 0 1 2.17 2.17v23.865a2.17 2.17 0 0 1-2.17 2.17h-2.893a2.17 2.17 0 0 1-2.17-2.17V20.61a2.17 2.17 0 0 1 2.17-2.17z",
+        fillRule: "nonzero"
+      })))), React.createElement("img", {
+        src: image,
+        alt: "".concat(og.description)
+      })), React.createElement("div", {
+        className: "str-chat__audio__content"
+      }, React.createElement("span", {
+        className: "str-chat__audio__content--title"
+      }, React.createElement("strong", null, og.title)), React.createElement("span", {
+        className: "str-chat__audio__content--subtitle"
+      }, og.text), React.createElement("div", {
+        className: "str-chat__audio__content--progress"
+      }, React.createElement("div", {
+        style: {
+          width: "".concat(this.state.progress, "%")
+        }
+      })))));
+    }
+  }]);
+
+  return Audio;
+}(React.Component);
+
+_defineProperty(Audio, "propTypes", {
+  /** Attachment object of audio type */
+  og: PropTypes.object
+});
+
+/**
+ * Attachment - The message attachment
+ *
+ * @example ./docs/Attachment.md
+ * @extends PureComponent
+ */
+
+var Attachment =
+/*#__PURE__*/
+function (_PureComponent) {
+  _inherits(Attachment, _PureComponent);
+
+  function Attachment() {
+    var _getPrototypeOf2;
+
+    var _this;
+
+    _classCallCheck(this, Attachment);
+
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(Attachment)).call.apply(_getPrototypeOf2, [this].concat(args)));
+
+    _defineProperty(_assertThisInitialized(_this), "attachmentRef", React__default.createRef());
+
+    _defineProperty(_assertThisInitialized(_this), "renderAttachmentActions", function (a) {
+      return React__default.createElement(AttachmentActions, _extends({
+        key: 'key-actions-' + a.id
+      }, a, {
+        actionHandler: _this.props.actionHandler
+      }));
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "renderAttachment", function (a) {
+      return React__default.createElement("div", {
+        className: "str-chat__attachment",
+        key: "key-image-".concat(a.id)
+      }, React__default.createElement(Card, _extends({}, a, {
+        key: "key-card-".concat(a.id)
+      })), _this.renderAttachmentActions(a));
+    });
+
+    return _this;
+  }
+
+  _createClass(Attachment, [{
+    key: "attachmentType",
+    value: function attachmentType(a) {
+      var type, extra;
+
+      if (a.actions && a.actions.length > 0) {
+        extra = 'actions';
+      }
+
+      if (a.type === 'giphy' || a.type === 'imgur') {
+        type = 'card';
+      } else if (a.type === 'image' && (a.title_link || a.og_scrape_url)) {
+        type = 'card';
+      } else if (a.type === 'image') {
+        type = 'image';
+      } else if (a.type === 'file') {
+        type = 'file';
+      } else if (a.type === 'audio') {
+        type = 'audio';
+      } else if (a.type === 'video') {
+        type = 'media';
+      } else {
+        type = 'card';
+        extra = 'no-image';
+      }
+
+      return {
+        type: type,
+        extra: extra
+      };
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      var a = this.props.attachment;
+
+      if (!a) {
+        return null;
+      }
+
+      var _this$attachmentType = this.attachmentType(a),
+          type = _this$attachmentType.type,
+          extra = _this$attachmentType.extra;
+
+      if (type === 'card' && !a.title_link && !a.og_scrape_url) {
+        return null;
+      }
+
+      var results = [];
+
+      if (type === 'image') {
+        if (a.actions && a.actions.length) {
+          results.push(React__default.createElement("div", {
+            className: "str-chat__attachment",
+            key: "key-image-".concat(a.id)
+          }, React__default.createElement(Image, a), this.renderAttachmentActions(a)));
+        } else {
+          results.push(React__default.createElement(Image, _extends({}, a, {
+            key: "key-image-".concat(a.id)
+          })));
+        }
+      } else if (type === 'file') {
+        a.asset_url && results.push(React__default.createElement("div", {
+          className: "str-chat__message-attachment-file--item",
+          key: "key-file-".concat(a.id)
+        }, React__default.createElement(reactFileUtils.FileIcon, {
+          mimeType: a.mime_type,
+          filename: a.title,
+          big: true,
+          size: 30
+        }), React__default.createElement("div", {
+          className: "str-chat__message-attachment-file--item-text"
+        }, React__default.createElement(SafeAnchor, {
+          href: a.asset_url,
+          download: true
+        }, a.title), a.file_size && React__default.createElement("span", null, prettybytes(a.file_size)))));
+      } else if (type === 'audio') {
+        results.push(React__default.createElement("div", {
+          className: "str-chat__attachment",
+          key: "key-video-".concat(a.id)
+        }, React__default.createElement(Audio, {
+          og: a
+        })));
+      } else if (type === 'media') {
+        if (a.actions && a.actions.length) {
+          results.push(React__default.createElement("div", {
+            className: "str-chat__attachment",
+            key: "key-video-".concat(a.id)
+          }, React__default.createElement("div", {
+            className: "str-chat__player-wrapper"
+          }, React__default.createElement(ReactPlayer, {
+            className: "react-player",
+            url: a.asset_url,
+            width: "100%",
+            height: "100%",
+            controls: true
+          })), this.renderAttachmentActions(a)));
+        } else {
+          results.push(React__default.createElement("div", {
+            className: "str-chat__player-wrapper",
+            key: "key-video-".concat(a.id)
+          }, React__default.createElement(ReactPlayer, {
+            className: "react-player",
+            url: a.asset_url,
+            width: "100%",
+            height: "100%",
+            controls: true
+          })));
+        }
+      } else {
+        if (a.actions && a.actions.length) {
+          results.push(this.renderAttachment(a));
+        } else {
+          results.push(React__default.createElement(Card, _extends({}, a, {
+            key: "key-card-".concat(a.id)
+          })));
+        }
+      }
+
+      if (results.length === 0) return null;
+      return React__default.createElement("div", {
+        className: "str-chat__message-attachment str-chat__message-attachment--".concat(type, " str-chat__message-attachment--").concat(a.type, " str-chat__message-attachment--").concat(type, "--").concat(extra),
+        ref: this.attachmentRef
+      }, results);
+    }
+  }]);
+
+  return Attachment;
+}(React.PureComponent);
+
+_defineProperty(Attachment, "propTypes", {
+  /**
+   * The attachment to render
+   * @see See [Attachment structure](https://getstream.io/chat/docs/#message_format)
+   *
+   *  */
+  attachment: PropTypes.object.isRequired,
+
+  /**
+   *
+   * Handler for actions. Actions in combination with attachments can be used to build [commands](https://getstream.io/chat/docs/#channel_commands).
+   *
+   * @param name {string} Name of action
+   * @param value {string} Value of action
+   * @param event Dom event that triggered this handler
+   */
+  actionHandler: PropTypes.func.isRequired
+});
+
+Attachment.propTypes = {};
 
 /**
  * Avatar - A round avatar image with fallback to username's first letter
@@ -129,7 +768,7 @@ function (_React$PureComponent) {
       }, image && !this.state.errored ? React__default.createElement("img", {
         src: image,
         alt: initials,
-        className: 'str-chat__avatar-image' + this.state.loaded ? ' str-chat__avatar-image--loaded' : '',
+        className: 'str-chat__avatar-image' + (this.state.loaded ? ' str-chat__avatar-image--loaded' : ''),
         style: {
           width: size,
           height: size,
@@ -166,667 +805,170 @@ _defineProperty(Avatar, "defaultProps", {
   shape: 'circle'
 });
 
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+var ChatContext = React__default.createContext({
+  client: null
+});
+function withChatContext(OriginalComponent) {
+  var ContextAwareComponent = function ContextComponent(props) {
+    return React__default.createElement(ChatContext.Consumer, null, function (context) {
+      var mergedProps = _objectSpread({}, context, {}, props);
+
+      return React__default.createElement(OriginalComponent, mergedProps);
+    });
+  };
+
+  ContextAwareComponent.displayName = OriginalComponent.displayName || OriginalComponent.name || 'Component';
+  ContextAwareComponent.displayName = ContextAwareComponent.displayName.replace('Base', '');
+  return ContextAwareComponent;
+}
+var ChannelContext = React__default.createContext({});
+function withChannelContext(OriginalComponent) {
+  var ContextAwareComponent = function ContextComponent(props) {
+    return React__default.createElement(ChannelContext.Consumer, null, function (channelContext) {
+      return React__default.createElement(OriginalComponent, _extends({}, channelContext, props));
+    });
+  };
+
+  ContextAwareComponent.displayName = OriginalComponent.displayName || OriginalComponent.name || 'Component';
+  ContextAwareComponent.displayName = ContextAwareComponent.displayName.replace('Base', '');
+  return ContextAwareComponent;
+}
+
 /**
- * SafeAnchor - In all ways similar to a regular anchor tag.
- * The difference is that it sanitizes the href value and prevents XSS
- * @extends PureComponent
- */
-
-var SafeAnchor =
-/*#__PURE__*/
-function (_React$PureComponent) {
-  _inherits(SafeAnchor, _React$PureComponent);
-
-  function SafeAnchor() {
-    _classCallCheck(this, SafeAnchor);
-
-    return _possibleConstructorReturn(this, _getPrototypeOf(SafeAnchor).apply(this, arguments));
-  }
-
-  _createClass(SafeAnchor, [{
-    key: "render",
-    value: function render() {
-      var href = sanitizeUrl.sanitizeUrl(this.props.href);
-      return React__default.createElement("a", _extends({}, this.props, {
-        href: href
-      }), this.props.children);
-    }
-  }]);
-
-  return SafeAnchor;
-}(React__default.PureComponent);
-
-var giphyLogo = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAAAkCAYAAAB/up84AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAABVhJREFUeNrsW6GS20AMdToGBgEGAQYBBgEBBQYFgQcP5hMO9jP6CYWFBwsPBgYUGBQEFAQUGAQYBBgYGHjmutt5O6NupbXXcZJrx5rJXGyv11o96Ukr52avr6/BJG9HZmMBMpvNYnxt1JzNZNoRAYFxM2Z8rT6FuueMcaH6s1KfhBn3U42r1Jg1rrfq+Bt5xgf1Z64+uQFQndNzLc1Ydfwg6F2p6wd1PVXfU+b6Gc9vHGuh8+jrsXVN61Sq64XggNw95tlH9XmP6y3W2OI+qvN3db6mN7/zBFAb8L2aNMJxRsDQC6jIuEyN039LnAvV8QJKRRijZUHmT8iiLpEFDHKJaB1TGN732WuAokEIDQCwhwGjsMEIMNgp6qY9JlsTgyXquCFG1d54IsbOsKAVPLDBcQJjUxB0RJwAltGntNQ46GhzqPnb0y0954RG/1iLQ7SRCkR+guiPtW6GFRg5gAlCrFvbJEZ0ngDAUn0/Y77fDCJFXuiB/AmGDC3PLg0YWLRW5CcJWWPglNxDKS6C59AcZBs/sYxbOQBqHHkuZYCsGCds4SQJDDx3RK3RjUb9EfMUcLQ57BHS64MAIYtYkvEt+d4wCzqr++ipkoTtkihOI2chREfA5KiC0GOAaMig05zoWJPjgMk39jxcPphDR0mSDrtq438g51iq8omQlEnYJfHoiAFxYQGko6bCPSmZ5wS+TRx0Zc5R4CtmHbEVJT+0p1uOYdNE1SMfOKNO0zXWEmItptApsfYa1LV0UZUPIHSCmlRYJhfokNWhX5IcsmIWbEAMCQWerWirhZK57MghNQyzgke3QuQWPUv4EAac9wCuJjmkNmvUNEwiobX+DgdEWoQGgNDPGtTWWhRRWONX5JlnePCZhP1JUCOzPN1O0C2MohP7xuiko8Qy9INUDBg2YPJMlzP8pRv0qYeUdu+Cy+RAKIYmtVqojM5kkS0DwkXlLuY0ICzgAEOlAd8fPe+rYJdppz61TiZ5G4AgcScWz05RcUtAkOwyJMtI4FzNt3suCWKfwLUhdqRC0yA/enB1CZ4vBZ2fhIptJ4x/5PYVavyzQ39N0V8ddnsQ+m3sfX02hjo3bIVJ7d5PhqojZxYdC3NEdv9oQMQWFFjHHqpLEsc9BZyF23c9cG0ZOJjUIN15V1mY8OOAhW0E77yWaP2eoO9VBFG/d6yX6/xuHT2z3AsQ5ImnjrZBF6XcUiKAEl0RlJzZ7ZtnbxmqSgRqfxmyD9k6wNDGzuExecB3Z1/ukBOjQH73MZbspChFp9nQ/EYY9+LaaIYOqlo7JjwISX+LcBwbjAOz2ZKS7BpOcq0o0R2HvZAbHpHPJGc+dm00paQuedmOA4O0WD5fyQ4V08Ip4ATxhYl8CCh76/0QLVyehlBVFyCpYJTcKmPjHoY8XNE2VQ8dbIkdr4Z95npBwcNVahKzNEMBSYSyz46iLm8sLunreG5O+xYTsaMUHYu6bMn79sRCT2+8l6SMV2cCT5e3UspBXbbd9n3nDIN/Q1KP3JDfWLcd8kZwCVX12hjeOlmOIMe+L6FGjJLC4QS5rz6hg/tThjZiU0Pr/g7D65/uCUafKgaUJu0lHjvox/XsjXA+GAOQUogIXV8/v7GoKOGJfYuHxvHjt7t3rEMHD2+E5PoR+5GCLCS+8g6Z2xgGt6anuwGC99MSKAl6RrfUs/ofje+b1PcjlJBlMMk4gKBUe77AqKVP/T1Jj30IQPmCTdkm6NeKb5BkJzCGdCA8XuFGZIOWCBEh/mwGiZ/rFZXk3xHEdkjHb6MknVOhypJe+Sac03XlL4fe3r81mH518q9GyCS3kV8CDADlsrVaJhTLAgAAAABJRU5ErkJggg==";
-
-/**
- * Card - Simple Card Layout
+ * LoadingIndicator - Just a simple loading spinner..
  *
- * @example ./docs/Card.md
+ * @example ./docs/LoadingIndicator.md
  * @extends PureComponent
  */
 
-var Card =
+var LoadingIndicator =
 /*#__PURE__*/
 function (_React$PureComponent) {
-  _inherits(Card, _React$PureComponent);
+  _inherits(LoadingIndicator, _React$PureComponent);
 
-  function Card() {
+  function LoadingIndicator() {
     var _getPrototypeOf2;
 
     var _this;
 
-    _classCallCheck(this, Card);
+    _classCallCheck(this, LoadingIndicator);
 
     for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
       args[_key] = arguments[_key];
     }
 
-    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(Card)).call.apply(_getPrototypeOf2, [this].concat(args)));
+    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(LoadingIndicator)).call.apply(_getPrototypeOf2, [this].concat(args)));
 
-    _defineProperty(_assertThisInitialized(_this), "trimUrl", function (url) {
-      var trimmedUrl;
-
-      if (url !== undefined || url !== null) {
-        trimmedUrl = url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, '').split('/')[0];
-      }
-
-      return trimmedUrl;
-    });
+    _defineProperty(_assertThisInitialized(_this), "stopRef", React__default.createRef());
 
     return _this;
   }
 
-  _createClass(Card, [{
+  _createClass(LoadingIndicator, [{
     key: "render",
     value: function render() {
       var _this$props = this.props,
-          title = _this$props.title,
-          title_link = _this$props.title_link,
-          text = _this$props.text,
-          type = _this$props.type,
-          image_url = _this$props.image_url,
-          thumb_url = _this$props.thumb_url,
-          og_scrape_url = _this$props.og_scrape_url;
-      var image = thumb_url || image_url;
-
-      if (!title && !title_link && !image) {
-        return React__default.createElement("div", {
-          className: "str-chat__message-attachment-card str-chat__message-attachment-card--".concat(type)
-        }, React__default.createElement("div", {
-          className: "str-chat__message-attachment-card--content"
-        }, React__default.createElement("div", {
-          className: "str-chat__message-attachment-card--text"
-        }, "this content could not be displayed")));
-      }
-
-      if (!title_link && !og_scrape_url) {
-        return null;
-      }
-
+          size = _this$props.size,
+          color = _this$props.color;
       return React__default.createElement("div", {
-        className: "str-chat__message-attachment-card str-chat__message-attachment-card--".concat(type)
-      }, image && React__default.createElement("div", {
-        className: "str-chat__message-attachment-card--header"
-      }, React__default.createElement("img", {
-        src: image,
-        alt: image
-      })), React__default.createElement("div", {
-        className: "str-chat__message-attachment-card--content"
-      }, React__default.createElement("div", {
-        className: "str-chat__message-attachment-card--flex"
-      }, title && React__default.createElement("div", {
-        className: "str-chat__message-attachment-card--title"
-      }, title), text && React__default.createElement("div", {
-        className: "str-chat__message-attachment-card--text"
-      }, text), (title_link || og_scrape_url) && React__default.createElement(SafeAnchor, {
-        href: title_link || og_scrape_url,
-        target: "_blank",
-        rel: "noopener noreferrer",
-        className: "str-chat__message-attachment-card--url"
-      }, this.trimUrl(title_link || og_scrape_url))), type === 'giphy' && React__default.createElement("img", {
-        className: "str-chat__message-attachment-card__giphy-logo",
-        src: giphyLogo,
-        alt: "giphy logo"
-      })));
-    }
-  }]);
-
-  return Card;
-}(React__default.PureComponent);
-
-_defineProperty(Card, "propTypes", {
-  /** Title retured by the OG scraper */
-  title: PropTypes.string.isRequired,
-
-  /** Link retured by the OG scraper */
-  title_link: PropTypes.string,
-
-  /** The scraped url, used as a fallback if the OG-data doesnt include a link */
-  og_scrape_url: PropTypes.string,
-
-  /** The url of the full sized image */
-  image_url: PropTypes.string,
-
-  /** The url for thumbnail sized image*/
-  thumb_url: PropTypes.string,
-
-  /** Description retured by the OG scraper */
-  text: PropTypes.string
-});
-
-/**
- * Image - Small wrapper around an image tag, supports thumbnails
- *
- * @example ./docs/Image.md
- * @extends PureComponent
- */
-
-var Image =
-/*#__PURE__*/
-function (_React$PureComponent) {
-  _inherits(Image, _React$PureComponent);
-
-  function Image() {
-    var _getPrototypeOf2;
-
-    var _this;
-
-    _classCallCheck(this, Image);
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(Image)).call.apply(_getPrototypeOf2, [this].concat(args)));
-
-    _defineProperty(_assertThisInitialized(_this), "state", {
-      isOpen: false
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "openLightbox", function () {
-      _this.setState({
-        isOpen: true
-      });
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "closeLightbox", function () {
-      _this.setState({
-        isOpen: false
-      });
-    });
-
-    return _this;
-  }
-
-  _createClass(Image, [{
-    key: "render",
-    value: function render() {
-      var _this$props = this.props,
-          image_url = _this$props.image_url,
-          thumb_url = _this$props.thumb_url,
-          fallback = _this$props.fallback;
-      return React__default.createElement(React__default.Fragment, null, React__default.createElement("img", {
-        className: "str-chat__message-attachment--img",
-        onClick: this.openLightbox,
-        src: thumb_url || image_url,
-        alt: fallback
-      }), React__default.createElement(Lightbox, {
-        isOpen: this.state.isOpen,
-        onClose: this.closeLightbox,
-        images: [{
-          src: image_url || thumb_url
-        }],
-        backdropClosesModal: true
-      }));
-    }
-  }]);
-
-  return Image;
-}(React__default.PureComponent);
-
-_defineProperty(Image, "propTypes", {
-  /** The full size image url */
-  image_url: PropTypes.string,
-
-  /** The thumb url */
-  thumb_url: PropTypes.string,
-
-  /** The text fallback for the image */
-  fallback: PropTypes.string
-});
-
-/**
- * AttachmentActions - The actions you can take on an attachment
- *
- * @example ./docs/AttachmentActions.md
- * @extends PureComponent
- */
-
-var AttachmentActions =
-/*#__PURE__*/
-function (_React$PureComponent) {
-  _inherits(AttachmentActions, _React$PureComponent);
-
-  function AttachmentActions() {
-    _classCallCheck(this, AttachmentActions);
-
-    return _possibleConstructorReturn(this, _getPrototypeOf(AttachmentActions).apply(this, arguments));
-  }
-
-  _createClass(AttachmentActions, [{
-    key: "render",
-    value: function render() {
-      var _this = this;
-
-      var _this$props = this.props,
-          text = _this$props.text,
-          id = _this$props.id,
-          actions = _this$props.actions,
-          actionHandler = _this$props.actionHandler;
-      return React__default.createElement("div", {
-        className: "str-chat__message-attachment-actions"
-      }, React__default.createElement("form", {
-        className: "str-chat__message-attachment-actions-form"
-      }, React__default.createElement("span", {
-        key: 0
-      }, text), actions.map(function (action) {
-        return React__default.createElement("button", {
-          className: "str-chat__message-attachment-actions-button str-chat__message-attachment-actions-button--".concat(action.style),
-          key: "".concat(id, "-").concat(action.value),
-          "data-value": action.value,
-          onClick: actionHandler.bind(_this, action.name, action.value)
-        }, action.text);
-      })));
-    }
-  }]);
-
-  return AttachmentActions;
-}(React__default.PureComponent);
-
-_defineProperty(AttachmentActions, "propTypes", {
-  // /** The id of the form input */
-  // id: PropTypes.string.isRequired,
-
-  /** The text for the form input */
-  text: PropTypes.string,
-
-  /** A list of actions */
-  actions: PropTypes.array.isRequired,
-
-  /**
-   *
-   * Handler for actions. Actions in combination with attachments can be used to build [commands](https://getstream.io/chat/docs/#channel_commands).
-   *
-   * @param name {string} Name of action
-   * @param value {string} Value of action
-   * @param event Dom event that triggered this handler
-   */
-  actionHandler: PropTypes.func.isRequired
-});
-
-var Audio =
-/*#__PURE__*/
-function (_React$Component) {
-  _inherits(Audio, _React$Component);
-
-  function Audio(props) {
-    var _this;
-
-    _classCallCheck(this, Audio);
-
-    _this = _possibleConstructorReturn(this, _getPrototypeOf(Audio).call(this, props));
-
-    _defineProperty(_assertThisInitialized(_this), "playAudio", function () {
-      if (_this.audioRef.current !== null) {
-        _this.audioRef.current.pause();
-
-        _this.updateProgress();
-
-        _this.setState({
-          playing: true,
-          updateProgress: setInterval(_this.updateProgress, 500)
-        }); //$FlowFixMe
-
-
-        _this.audioRef.current.play();
-      }
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "pauseAudio", function () {
-      if (_this.audioRef.current !== null) {
-        _this.audioRef.current.pause();
-      }
-
-      _this.setState({
-        playing: false
-      });
-
-      window.clearInterval(_this.state.updateProgress);
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "updateProgress", function () {
-      if (_this.audioRef.current !== null) {
-        var position = _this.audioRef.current.currentTime;
-        var duration = _this.audioRef.current.duration;
-        var progress = 100 / duration * position;
-
-        _this.setState({
-          progress: progress
-        });
-
-        if (position === duration) {
-          _this.pauseAudio();
-        }
-      }
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "_handleClose", function (e) {
-      if (_this.props.handleClose) {
-        _this.props.handleClose(e);
-      }
-    });
-
-    _this.state = {
-      open: false,
-      playing: false,
-      progress: 0,
-      updateProgress: null
-    };
-    _this.audioRef = React.createRef();
-    return _this;
-  }
-
-  _createClass(Audio, [{
-    key: "componentWillUnmount",
-    value: function componentWillUnmount() {
-      window.clearInterval(this.state.updateProgress);
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      var _this2 = this;
-
-      var og = this.props.og;
-      var audio = og;
-      var url = og.asset_url;
-      var image = og.image_url;
-      return React.createElement("div", {
-        className: "str-chat__audio"
-      }, React.createElement("div", {
-        className: "str-chat__audio__wrapper"
-      }, React.createElement("audio", {
-        ref: this.audioRef
-      }, React.createElement("source", {
-        src: url,
-        type: audio.type === 'audio/vnd.facebook.bridge' ? 'audio/mp3' : 'audio/mp3'
-      })), React.createElement("div", {
-        className: "str-chat__audio__image"
-      }, React.createElement("div", {
-        className: "str-chat__audio__image--overlay"
-      }, !this.state.playing ? React.createElement("div", {
-        onClick: function onClick() {
-          return _this2.playAudio();
-        },
-        className: "str-chat__audio__image--button"
-      }, React.createElement("svg", {
-        width: "40",
-        height: "40",
-        viewBox: "0 0 64 64",
-        xmlns: "http://www.w3.org/2000/svg"
-      }, React.createElement("path", {
-        d: "M32 58c14.36 0 26-11.64 26-26S46.36 6 32 6 6 17.64 6 32s11.64 26 26 26zm0 6C14.327 64 0 49.673 0 32 0 14.327 14.327 0 32 0c17.673 0 32 14.327 32 32 0 17.673-14.327 32-32 32zm13.237-28.412L26.135 45.625a3.27 3.27 0 0 1-4.426-1.4 3.319 3.319 0 0 1-.372-1.47L21 23.36c-.032-1.823 1.41-3.327 3.222-3.358a3.263 3.263 0 0 1 1.473.322l19.438 9.36a3.311 3.311 0 0 1 .103 5.905z",
-        fillRule: "nonzero"
-      }))) : React.createElement("div", {
-        onClick: function onClick() {
-          return _this2.pauseAudio();
-        },
-        className: "str-chat__audio__image--button"
-      }, React.createElement("svg", {
-        width: "40",
-        height: "40",
-        viewBox: "0 0 64 64",
-        xmlns: "http://www.w3.org/2000/svg"
-      }, React.createElement("path", {
-        d: "M32 58.215c14.478 0 26.215-11.737 26.215-26.215S46.478 5.785 32 5.785 5.785 17.522 5.785 32 17.522 58.215 32 58.215zM32 64C14.327 64 0 49.673 0 32 0 14.327 14.327 0 32 0c17.673 0 32 14.327 32 32 0 17.673-14.327 32-32 32zm-7.412-45.56h2.892a2.17 2.17 0 0 1 2.17 2.17v23.865a2.17 2.17 0 0 1-2.17 2.17h-2.892a2.17 2.17 0 0 1-2.17-2.17V20.61a2.17 2.17 0 0 1 2.17-2.17zm12.293 0h2.893a2.17 2.17 0 0 1 2.17 2.17v23.865a2.17 2.17 0 0 1-2.17 2.17h-2.893a2.17 2.17 0 0 1-2.17-2.17V20.61a2.17 2.17 0 0 1 2.17-2.17z",
-        fillRule: "nonzero"
-      })))), React.createElement("img", {
-        src: image,
-        alt: "".concat(og.description)
-      })), React.createElement("div", {
-        className: "str-chat__audio__content"
-      }, React.createElement("span", {
-        className: "str-chat__audio__content--title"
-      }, React.createElement("strong", null, og.title)), React.createElement("span", {
-        className: "str-chat__audio__content--subtitle"
-      }, og.text), React.createElement("div", {
-        className: "str-chat__audio__content--progress"
-      }, React.createElement("div", {
+        className: 'str-chat__loading-indicator ' + color,
         style: {
-          width: "".concat(this.state.progress, "%")
+          width: size,
+          height: size
         }
-      })))));
+      }, React__default.createElement("svg", {
+        width: size,
+        height: size,
+        viewBox: "0 0 30 30",
+        xmlns: "http://www.w3.org/2000/svg"
+      }, React__default.createElement("defs", null, React__default.createElement("linearGradient", {
+        x1: "50%",
+        y1: "0%",
+        x2: "50%",
+        y2: "100%",
+        id: "a"
+      }, React__default.createElement("stop", {
+        stopColor: "#FFF",
+        stopOpacity: "0",
+        offset: "0%"
+      }), React__default.createElement("stop", {
+        ref: this.stopRef,
+        offset: "100%",
+        stopColor: color,
+        stopOpacity: "1",
+        style: {
+          stopColor: color
+        }
+      }))), React__default.createElement("path", {
+        d: "M2.518 23.321l1.664-1.11A12.988 12.988 0 0 0 15 28c7.18 0 13-5.82 13-13S22.18 2 15 2V0c8.284 0 15 6.716 15 15 0 8.284-6.716 15-15 15-5.206 0-9.792-2.652-12.482-6.679z",
+        fill: "url(#a)",
+        fillRule: "evenodd"
+      })));
     }
   }]);
 
-  return Audio;
-}(React.Component);
+  return LoadingIndicator;
+}(React__default.PureComponent);
+
+_defineProperty(LoadingIndicator, "propTypes", {
+  /** The size of the loading icon */
+  size: PropTypes.number,
+
+  /** Set the color of the LoadingIndicator */
+  color: PropTypes.string
+});
+
+_defineProperty(LoadingIndicator, "defaultProps", {
+  size: 15,
+  color: '#006CFF'
+});
 
 /**
- * Attachment - The message attachment
+ * LoadingErrorIndicator - UI component for error indicator in Channel.
  *
- * @example ./docs/Attachment.md
+ * @example ./docs/LoadingErrorIndicator.md
  * @extends PureComponent
  */
 
-var Attachment =
+var LoadingErrorIndicator =
 /*#__PURE__*/
-function (_PureComponent) {
-  _inherits(Attachment, _PureComponent);
+function (_React$PureComponent) {
+  _inherits(LoadingErrorIndicator, _React$PureComponent);
 
-  function Attachment() {
-    var _getPrototypeOf2;
+  function LoadingErrorIndicator() {
+    _classCallCheck(this, LoadingErrorIndicator);
 
-    var _this;
-
-    _classCallCheck(this, Attachment);
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(Attachment)).call.apply(_getPrototypeOf2, [this].concat(args)));
-
-    _defineProperty(_assertThisInitialized(_this), "attachmentRef", React__default.createRef());
-
-    return _this;
+    return _possibleConstructorReturn(this, _getPrototypeOf(LoadingErrorIndicator).apply(this, arguments));
   }
 
-  _createClass(Attachment, [{
+  _createClass(LoadingErrorIndicator, [{
     key: "render",
     value: function render() {
-      var a = this.props.attachment;
-
-      if (!a) {
-        return null;
-      }
-
-      var type, extra;
-
-      if (a.actions && a.actions.length > 0) {
-        extra = 'actions';
-      }
-
-      if (a.type === 'giphy' || a.type === 'imgur') {
-        type = 'card';
-      } else if (a.type === 'image' && (a.title_link || a.og_scrape_url)) {
-        type = 'card';
-      } else if (a.type === 'image') {
-        type = 'image';
-      } else if (a.type === 'file') {
-        type = 'file';
-      } else if (a.type === 'audio') {
-        type = 'audio';
-      } else if (a.type === 'video') {
-        type = 'media';
-      } else {
-        type = 'card';
-        extra = 'no-image';
-      }
-
-      if (type === 'card' && !a.title_link && !a.og_scrape_url) {
-        return null;
-      }
-
-      var results = [];
-
-      if (type === 'card') {
-        if (a.actions && a.actions.length) {
-          results.push(React__default.createElement("div", {
-            style: {
-              maxWidth: 450
-            },
-            key: "key-image-".concat(a.id)
-          }, React__default.createElement(Card, _extends({}, a, {
-            key: "key-card-".concat(a.id)
-          })), React__default.createElement(AttachmentActions, _extends({
-            key: 'key-actions-' + a.id
-          }, a, {
-            actionHandler: this.props.actionHandler
-          }))));
-        } else {
-          results.push(React__default.createElement(Card, _extends({}, a, {
-            key: "key-card-".concat(a.id)
-          })));
-        }
-      } else if (type === 'image') {
-        if (a.actions && a.actions.length) {
-          results.push(React__default.createElement("div", {
-            style: {
-              maxWidth: 450
-            },
-            key: "key-image-".concat(a.id)
-          }, React__default.createElement(Image, a), React__default.createElement(AttachmentActions, _extends({
-            key: 'key-actions-' + a.id
-          }, a, {
-            actionHandler: this.props.actionHandler
-          }))));
-        } else {
-          results.push(React__default.createElement(Image, _extends({}, a, {
-            key: "key-image-".concat(a.id)
-          })));
-        }
-      } else if (type === 'file') {
-        a.asset_url && results.push(React__default.createElement("div", {
-          className: "str-chat__message-attachment-file--item",
-          key: "key-file-".concat(a.id)
-        }, React__default.createElement(reactFileUtils.FileIcon, {
-          mimeType: a.mime_type,
-          filename: a.title,
-          big: true,
-          size: 30
-        }), React__default.createElement("div", {
-          className: "str-chat__message-attachment-file--item-text"
-        }, React__default.createElement(SafeAnchor, {
-          href: a.asset_url,
-          download: true
-        }, a.title), a.file_size && React__default.createElement("span", null, prettybytes(a.file_size)))));
-      } else if (type === 'audio') {
-        results.push(React__default.createElement("div", {
-          style: {
-            maxWidth: 450
-          },
-          key: "key-video-".concat(a.id)
-        }, React__default.createElement(Audio, {
-          og: a
-        })));
-      } else if (type === 'media') {
-        if (a.actions && a.actions.length) {
-          results.push(React__default.createElement("div", {
-            style: {
-              maxWidth: 450
-            },
-            key: "key-video-".concat(a.id)
-          }, React__default.createElement("div", {
-            className: "str-chat__player-wrapper"
-          }, React__default.createElement(ReactPlayer, {
-            className: "react-player",
-            url: a.asset_url,
-            width: "100%",
-            height: "100%",
-            controls: true
-          })), React__default.createElement(AttachmentActions, _extends({
-            key: 'key-actions-' + a.id
-          }, a, {
-            actionHandler: this.props.actionHandler
-          }))));
-        } else {
-          results.push(React__default.createElement("div", {
-            className: "str-chat__player-wrapper",
-            key: "key-video-".concat(a.id)
-          }, React__default.createElement(ReactPlayer, {
-            className: "react-player",
-            url: a.asset_url,
-            width: "100%",
-            height: "100%",
-            controls: true
-          })));
-        }
-      } else {
-        if (a.actions && a.actions.length) {
-          results.push(React__default.createElement("div", {
-            style: {
-              maxWidth: 450
-            },
-            key: "key-image-".concat(a.id)
-          }, React__default.createElement(Card, _extends({}, a, {
-            key: "key-card-".concat(a.id)
-          })), React__default.createElement(AttachmentActions, _extends({
-            key: 'key-actions-' + a.id
-          }, a, {
-            actionHandler: this.props.actionHandler
-          }))));
-        } else {
-          results.push(React__default.createElement(Card, _extends({}, a, {
-            key: "key-card-".concat(a.id)
-          })));
-        }
-      }
-
-      if (results.length === 0) return null;
-      return React__default.createElement("div", {
-        className: "str-chat__message-attachment str-chat__message-attachment--".concat(type, " str-chat__message-attachment--").concat(a.type, " str-chat__message-attachment--").concat(type, "--").concat(extra),
-        ref: this.attachmentRef
-      }, results);
+      if (!this.props.error) return null;
+      return React__default.createElement("div", null, "Error: ", this.props.error.message);
     }
   }]);
 
-  return Attachment;
-}(React.PureComponent);
+  return LoadingErrorIndicator;
+}(React__default.PureComponent);
 
-_defineProperty(Attachment, "propTypes", {
-  /**
-   * The attachment to render
-   * @see See [Attachment structure](https://getstream.io/chat/docs/#message_format)
-   *
-   *  */
-  attachment: PropTypes.object.isRequired,
-
-  /**
-   *
-   * Handler for actions. Actions in combination with attachments can be used to build [commands](https://getstream.io/chat/docs/#channel_commands).
-   *
-   * @param name {string} Name of action
-   * @param value {string} Value of action
-   * @param event Dom event that triggered this handler
-   */
-  actionHandler: PropTypes.func.isRequired
+_defineProperty(LoadingErrorIndicator, "propTypes", {
+  /** Error object */
+  error: PropTypes.oneOfType([PropTypes.shape({
+    message: PropTypes.string
+  }), PropTypes.bool])
 });
 
-Attachment.propTypes = {};
+_defineProperty(LoadingErrorIndicator, "defaultProps", {
+  error: false
+});
 
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { keys.push.apply(keys, Object.getOwnPropertySymbols(object)); } if (enumerableOnly) keys = keys.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); return keys; }
+function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$1(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$1(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 var emojiSetDef = {
   spriteUrl: 'https://getstream.imgix.net/images/emoji-sprite.png',
   size: 20,
@@ -839,37 +981,37 @@ var commonEmoji = {
   short_names: [],
   custom: true
 };
-var defaultMinimalEmojis = [_objectSpread({
+var defaultMinimalEmojis = [_objectSpread$1({
   id: 'like',
   name: 'like',
   colons: ':+1:',
   sheet_x: 0,
   sheet_y: 0
-}, commonEmoji, {}, emojiSetDef), _objectSpread({
+}, commonEmoji, {}, emojiSetDef), _objectSpread$1({
   id: 'love',
   name: 'love',
   colons: ':heart:',
   sheet_x: 1,
   sheet_y: 2
-}, commonEmoji, {}, emojiSetDef), _objectSpread({
+}, commonEmoji, {}, emojiSetDef), _objectSpread$1({
   id: 'haha',
   name: 'haha',
   colons: ':joy:',
   sheet_x: 1,
   sheet_y: 0
-}, commonEmoji, {}, emojiSetDef), _objectSpread({
+}, commonEmoji, {}, emojiSetDef), _objectSpread$1({
   id: 'wow',
   name: 'wow',
   colons: ':astonished:',
   sheet_x: 0,
   sheet_y: 2
-}, commonEmoji, {}, emojiSetDef), _objectSpread({
+}, commonEmoji, {}, emojiSetDef), _objectSpread$1({
   id: 'sad',
   name: 'sad',
   colons: ':pensive:',
   sheet_x: 0,
   sheet_y: 1
-}, commonEmoji, {}, emojiSetDef), _objectSpread({
+}, commonEmoji, {}, emojiSetDef), _objectSpread$1({
   id: 'angry',
   name: 'angry',
   colons: ':angry:',
@@ -887,8 +1029,7 @@ var isOnlyEmojis = function isOnlyEmojis(text) {
   return !noSpace;
 };
 var isPromise = function isPromise(thing) {
-  var promise = thing && typeof thing.then === 'function';
-  return promise;
+  return thing && typeof thing.then === 'function';
 };
 var byDate = function byDate(a, b) {
   return a.created_at - b.created_at;
@@ -998,7 +1139,8 @@ var smartRender = function smartRender(ElementOrComponentOrLiteral, props, fallb
 
   if (React__default.isValidElement(ElementOrComponentOrLiteral)) {
     // Flow cast through any, to make flow believe it's a React.Element
-    var element = ElementOrComponentOrLiteral;
+    var element = ElementOrComponentOrLiteral; // eslint-disable-line
+
     return element;
   } // Flow cast through any to remove React.Element after previous check
 
@@ -1154,8 +1296,8 @@ _defineProperty(MessageActionsBox, "propTypes", {
   /**
    * @deprecated
    *
-   *  The message component, most logic is delegated to this component and MessageActionsBox uses the following functions explicitely:
-   *  `handleFlag`, `handleMute`, `handleEdit`, `handleDelete`, `canDeleteMessagec`, `canEditMessage`, `isMyMessage`, `isAdmin`
+   *  The message component, most logic is delegated to this component and MessageActionsBox uses the following functions explicitly:
+   *  `handleFlag`, `handleMute`, `handleEdit`, `handleDelete`, `canDeleteMessage`, `canEditMessage`, `isMyMessage`, `isAdmin`
    */
   Message: PropTypes.oneOfType([PropTypes.node, PropTypes.func, PropTypes.object]).isRequired,
 
@@ -1163,16 +1305,54 @@ _defineProperty(MessageActionsBox, "propTypes", {
   mine: PropTypes.bool,
 
   /** DOMRect object for parent MessageList component */
-  messageListRect: PropTypes.object
+  messageListRect: PropTypes.object,
+
+  /**
+   * Handler for flaging a current message
+   *
+   * @param event React's MouseEventHandler event
+   * @returns void
+   * */
+  handleFlag: PropTypes.func,
+
+  /**
+   * Handler for muting a current message
+   *
+   * @param event React's MouseEventHandler event
+   * @returns void
+   * */
+  handleMute: PropTypes.func,
+
+  /**
+   * Handler for editing a current message
+   *
+   * @param event React's MouseEventHandler event
+   * @returns void
+   * */
+  handleEdit: PropTypes.func,
+
+  /**
+   * Handler for deleting a current message
+   *
+   * @param event React's MouseEventHandler event
+   * @returns void
+   * */
+  handleDelete: PropTypes.func,
+
+  /**
+   * Returns array of avalable message actions for current message.
+   * Please check [Message](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Message.js) component for default implementation.
+   */
+  getMessageActions: PropTypes.func
 });
 
-_defineProperty(MessageActionsBox, "defaultProp", {
+_defineProperty(MessageActionsBox, "defaultProps", {
   open: false
 });
 
-function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { keys.push.apply(keys, Object.getOwnPropertySymbols(object)); } if (enumerableOnly) keys = keys.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); return keys; }
+function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$1(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$1(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$2(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$2(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 var ReactionsList =
 /*#__PURE__*/
 function (_React$Component) {
@@ -1196,7 +1376,7 @@ function (_React$Component) {
       });
 
       var reactionsEmojis = _this.props.reactionOptions.reduce(function (acc, cur) {
-        return _objectSpread$1({}, acc, _defineProperty({}, cur.id, cur));
+        return _objectSpread$2({}, acc, _defineProperty({}, cur.id, cur));
       }, {});
 
       return Object.keys(reactionsByType).map(function (type) {
@@ -1245,11 +1425,17 @@ function (_React$Component) {
 }(React__default.Component);
 
 _defineProperty(ReactionsList, "propTypes", {
+  /** List of reactions */
   reactions: PropTypes.array,
 
   /** Provide a list of reaction options [{name: 'angry', emoji: 'angry'}] */
   reactionOptions: PropTypes.array,
-  reverse: PropTypes.bool
+
+  /** If true, reaction list will be shown at trailing end of message bubble. */
+  reverse: PropTypes.bool,
+
+  /** Object/map of reaction id/type (e.g. 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry') vs count */
+  reaction_counts: PropTypes.object
 });
 
 _defineProperty(ReactionsList, "defaultProps", {
@@ -1282,95 +1468,6 @@ function (_React$PureComponent) {
 }(React__default.PureComponent);
 
 /**
- * LoadingIndicator - Just a simple loading spinner..
- *
- * @example ./docs/LoadingIndicator.md
- * @extends PureComponent
- */
-
-var LoadingIndicator =
-/*#__PURE__*/
-function (_React$PureComponent) {
-  _inherits(LoadingIndicator, _React$PureComponent);
-
-  function LoadingIndicator() {
-    var _getPrototypeOf2;
-
-    var _this;
-
-    _classCallCheck(this, LoadingIndicator);
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(LoadingIndicator)).call.apply(_getPrototypeOf2, [this].concat(args)));
-
-    _defineProperty(_assertThisInitialized(_this), "stopRef", React__default.createRef());
-
-    return _this;
-  }
-
-  _createClass(LoadingIndicator, [{
-    key: "render",
-    value: function render() {
-      var _this$props = this.props,
-          size = _this$props.size,
-          color = _this$props.color;
-      return React__default.createElement("div", {
-        className: 'str-chat__loading-indicator ' + color,
-        style: {
-          width: size,
-          height: size
-        }
-      }, React__default.createElement("svg", {
-        width: size,
-        height: size,
-        viewBox: "0 0 30 30",
-        xmlns: "http://www.w3.org/2000/svg"
-      }, React__default.createElement("defs", null, React__default.createElement("linearGradient", {
-        x1: "50%",
-        y1: "0%",
-        x2: "50%",
-        y2: "100%",
-        id: "a"
-      }, React__default.createElement("stop", {
-        stopColor: "#FFF",
-        stopOpacity: "0",
-        offset: "0%"
-      }), React__default.createElement("stop", {
-        ref: this.stopRef,
-        offset: "100%",
-        stopColor: color,
-        stopOpacity: "1",
-        style: {
-          stopColor: color
-        }
-      }))), React__default.createElement("path", {
-        d: "M2.518 23.321l1.664-1.11A12.988 12.988 0 0 0 15 28c7.18 0 13-5.82 13-13S22.18 2 15 2V0c8.284 0 15 6.716 15 15 0 8.284-6.716 15-15 15-5.206 0-9.792-2.652-12.482-6.679z",
-        fill: "url(#a)",
-        fillRule: "evenodd"
-      })));
-    }
-  }]);
-
-  return LoadingIndicator;
-}(React__default.PureComponent);
-
-_defineProperty(LoadingIndicator, "propTypes", {
-  /** The size of the loading icon */
-  size: PropTypes.number,
-
-  /** Set the color of the LoadingIndicator */
-  color: PropTypes.string
-});
-
-_defineProperty(LoadingIndicator, "defaultProps", {
-  size: 15,
-  color: '#006CFF'
-});
-
-/**
  * Gallery - displays up to 6 images in a simple responsive grid with a lightbox to view the images.
  * @example ./docs/Gallery.md
  * @extends PureComponent
@@ -1395,33 +1492,16 @@ function (_React$PureComponent) {
     _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(Gallery)).call.apply(_getPrototypeOf2, [this].concat(args)));
 
     _defineProperty(_assertThisInitialized(_this), "state", {
-      lightboxIsOpen: false,
-      imageIndex: 0
+      modalIsOpen: false,
+      currentIndex: 0
     });
 
-    _defineProperty(_assertThisInitialized(_this), "openLightbox", function (i) {
-      _this.setState({
-        lightboxIsOpen: true,
-        imageIndex: i
-      });
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "closeLightbox", function () {
-      _this.setState({
-        lightboxIsOpen: false,
-        imageIndex: 0
-      });
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "gotoPrevLightboxImage", function () {
-      _this.setState({
-        imageIndex: _this.state.imageIndex - 1
-      });
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "gotoNextLightboxImage", function () {
-      _this.setState({
-        imageIndex: _this.state.imageIndex + 1
+    _defineProperty(_assertThisInitialized(_this), "toggleModal", function (index) {
+      _this.setState(function (state) {
+        return {
+          modalIsOpen: !state.modalIsOpen,
+          currentIndex: index
+        };
       });
     });
 
@@ -1446,7 +1526,7 @@ function (_React$PureComponent) {
           className: "str-chat__gallery-image",
           key: "gallery-image-".concat(i),
           onClick: function onClick() {
-            return _this2.openLightbox(i);
+            return _this2.toggleModal(i);
           }
         }, React__default.createElement("img", {
           src: image.image_url || image.thumb_url
@@ -1454,21 +1534,18 @@ function (_React$PureComponent) {
       }), images.length > 3 && React__default.createElement("div", {
         className: "str-chat__gallery-placeholder",
         style: {
-          background: "url(".concat(images[3].image_url, ") top left no-repeat"),
-          backgroundSize: 'cover'
+          backgroundImage: "url(".concat(images[3].image_url, ")")
         },
         onClick: function onClick() {
-          return _this2.openLightbox(3);
+          return _this2.toggleModal(3);
         }
-      }, React__default.createElement("p", null, images.length - 3, " more")), React__default.createElement(Lightbox, {
-        images: formattedArray,
-        isOpen: this.state.lightboxIsOpen,
-        onClickPrev: this.gotoPrevLightboxImage,
-        onClickNext: this.gotoNextLightboxImage,
-        onClose: this.closeLightbox,
-        backdropClosesModal: true,
-        currentImage: this.state.imageIndex
-      }));
+      }, React__default.createElement("p", null, images.length - 3, " more")), React__default.createElement(Carousel.ModalGateway, null, this.state.modalIsOpen ? React__default.createElement(Carousel.Modal, {
+        onClose: this.toggleModal,
+        closeOnBackdropClick: true
+      }, React__default.createElement(Carousel__default, {
+        views: formattedArray,
+        currentIndex: this.state.currentIndex
+      })) : null));
     }
   }]);
 
@@ -1476,7 +1553,13 @@ function (_React$PureComponent) {
 }(React__default.PureComponent);
 
 _defineProperty(Gallery, "propTypes", {
-  images: PropTypes.array.isRequired
+  images: PropTypes.arrayOf(PropTypes.shape({
+    /** Url of the image */
+    image_url: PropTypes.string,
+
+    /** Url of thumbnail of image */
+    thumb_url: PropTypes.string
+  }))
 });
 
 /**
@@ -1566,10 +1649,9 @@ function (_PureComponent) {
     });
 
     _defineProperty(_assertThisInitialized(_this), "getUsersPerReaction", function (reactions, type) {
-      var filtered = reactions && reactions.filter(function (item) {
+      return reactions && reactions.filter(function (item) {
         return item.type === type;
       });
-      return filtered;
     });
 
     _defineProperty(_assertThisInitialized(_this), "getLatestUser", function (reactions, type) {
@@ -1585,10 +1667,9 @@ function (_PureComponent) {
     _defineProperty(_assertThisInitialized(_this), "getUserNames", function (reactions, type) {
       var filtered = _this.getUsersPerReaction(reactions, type);
 
-      var users = filtered && filtered.map(function (item) {
+      return filtered && filtered.map(function (item) {
         return item.user || 'NotFound';
       });
-      return users;
     });
 
     _defineProperty(_assertThisInitialized(_this), "getContainerDimensions", function () {
@@ -1685,8 +1766,7 @@ function (_PureComponent) {
       var _this$props = _this.props,
           reaction_counts = _this$props.reaction_counts,
           latest_reactions = _this$props.latest_reactions;
-
-      var lis = _this.props.reactionOptions.map(function (reaction) {
+      return _this.props.reactionOptions.map(function (reaction) {
         var users = _this.getUserNames(latest_reactions, reaction.id);
 
         var latestUser = _this.getLatestUser(latest_reactions, reaction.id);
@@ -1718,8 +1798,6 @@ function (_PureComponent) {
           className: "str-chat__message-reactions-list-item__count"
         }, count || ''));
       });
-
-      return lis;
     });
 
     _defineProperty(_assertThisInitialized(_this), "renderUsers", function (users) {
@@ -1800,20 +1878,19 @@ _defineProperty(ReactionSelector, "propTypes", {
   reaction_counts: PropTypes.object,
 
   /**
-   * Callback to handle the reaction
+   * Handler to set/unset reaction on message.
    *
    * @param type e.g. 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry'
    * */
   handleReaction: PropTypes.func.isRequired,
-
-  /** Set the direction to either left or right */
-  direction: PropTypes.oneOf(['left', 'right']),
 
   /** Enable the avatar display */
   detailedView: PropTypes.bool,
 
   /** Provide a list of reaction options [{name: 'angry', emoji: 'angry'}] */
   reactionOptions: PropTypes.array,
+
+  /** If true, reaction list will be shown at trailing end of message bubble. */
   reverse: PropTypes.bool
 });
 
@@ -1865,9 +1942,20 @@ function (_React$PureComponent) {
 }(React__default.PureComponent);
 
 _defineProperty(MessageRepliesCountButton, "propTypes", {
+  /** Label for number of replies, when count is 1 */
   labelSingle: PropTypes.string,
+
+  /** Label for number of replies, when count is more than 1 */
   labelPlural: PropTypes.string,
+
+  /** Number of replies */
   reply_count: PropTypes.number,
+
+  /**
+   * click handler for button
+   * @param event React's MouseEventHandler event
+   * @returns void
+   * */
   onClick: PropTypes.func
 });
 
@@ -1952,37 +2040,13 @@ function (_React$PureComponent) {
   return Modal;
 }(React__default.PureComponent);
 
-function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { keys.push.apply(keys, Object.getOwnPropertySymbols(object)); } if (enumerableOnly) keys = keys.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); return keys; }
+_defineProperty(Modal, "propTypes", {
+  /** Callback handler for closing of modal. */
+  onClose: PropTypes.func,
 
-function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$2(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$2(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-var ChatContext = React__default.createContext({
-  client: null
+  /** If true, modal is opened or visible. */
+  open: PropTypes.bool
 });
-function withChatContext(OriginalComponent) {
-  var ContextAwareComponent = function ContextComponent(props) {
-    return React__default.createElement(ChatContext.Consumer, null, function (context) {
-      var mergedProps = _objectSpread$2({}, context, {}, props);
-
-      return React__default.createElement(OriginalComponent, mergedProps);
-    });
-  };
-
-  ContextAwareComponent.displayName = OriginalComponent.displayName || OriginalComponent.name || 'Component';
-  ContextAwareComponent.displayName = ContextAwareComponent.displayName.replace('Base', '');
-  return ContextAwareComponent;
-}
-var ChannelContext = React__default.createContext({});
-function withChannelContext(OriginalComponent) {
-  var ContextAwareComponent = function ContextComponent(props) {
-    return React__default.createElement(ChannelContext.Consumer, null, function (channelContext) {
-      return React__default.createElement(OriginalComponent, _extends({}, channelContext, props));
-    });
-  };
-
-  ContextAwareComponent.displayName = OriginalComponent.displayName || OriginalComponent.name || 'Component';
-  ContextAwareComponent.displayName = ContextAwareComponent.displayName.replace('Base', '');
-  return ContextAwareComponent;
-}
 
 var KEY_CODES = {
   ESC: 27,
@@ -2342,9 +2406,9 @@ function defaultScrollToItem(container, item) {
   container.scrollTop = itemOffsetTop;
 }
 
-function ownKeys$3(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { keys.push.apply(keys, Object.getOwnPropertySymbols(object)); } if (enumerableOnly) keys = keys.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); return keys; }
+function ownKeys$3(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread$3(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$3(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$3(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread$3(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$3(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$3(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 var DEFAULT_CARET_POSITION = 'next';
 
 var errorMessage = function errorMessage(message) {
@@ -2394,8 +2458,7 @@ function (_React$Component) {
         return 0;
       }
 
-      var position = _this.textareaRef.selectionEnd;
-      return position;
+      return _this.textareaRef.selectionEnd;
     });
 
     _defineProperty(_assertThisInitialized(_this), "_onEnter", function (event) {
@@ -2551,8 +2614,7 @@ function (_React$Component) {
         }
 
         if (callback) {
-          var selectedItem = callback(item, currentTrigger);
-          return selectedItem;
+          return callback(item, currentTrigger);
         }
 
         return null;
@@ -2644,8 +2706,8 @@ function (_React$Component) {
         providedData = Promise.resolve(providedData);
       }
 
-      providedData.then(function (data$$1) {
-        if (!Array.isArray(data$$1)) {
+      providedData.then(function (data) {
+        if (!Array.isArray(data)) {
           throw new Error('Trigger provider has to provide an array!');
         }
 
@@ -2656,7 +2718,7 @@ function (_React$Component) {
 
         if (currentTrigger !== _this.state.currentTrigger) return; // if we haven't resolved any data let's close the autocomplete
 
-        if (!data$$1.length) {
+        if (!data.length) {
           _this._closeAutocomplete();
 
           return;
@@ -2664,7 +2726,7 @@ function (_React$Component) {
 
         _this.setState({
           dataLoading: false,
-          data: data$$1,
+          data: data,
           component: component
         });
       }).catch(function (e) {
@@ -2675,9 +2737,9 @@ function (_React$Component) {
     _defineProperty(_assertThisInitialized(_this), "_getSuggestions", function () {
       var _this$state4 = _this.state,
           currentTrigger = _this$state4.currentTrigger,
-          data$$1 = _this$state4.data;
-      if (!currentTrigger || !data$$1 || data$$1 && !data$$1.length) return null;
-      return data$$1;
+          data = _this$state4.data;
+      if (!currentTrigger || !data || data && !data.length) return null;
+      return data;
     });
 
     _defineProperty(_assertThisInitialized(_this), "_createRegExp", function () {
@@ -2998,7 +3060,7 @@ function (_React$Component) {
 
       var selectedItem = this._getItemOnSelect();
 
-      var maxRows = 10;
+      var maxRows = this.props.maxRows;
 
       if (!this.props.grow) {
         maxRows = 1;
@@ -3058,7 +3120,8 @@ _defineProperty(ReactTextareaAutocomplete, "defaultProps", {
   movePopupAsYouType: false,
   value: '',
   minChar: 1,
-  scrollToItem: true
+  scrollToItem: true,
+  maxRows: 10
 });
 
 var triggerPropsCheck = function triggerPropsCheck(_ref3) {
@@ -3162,6 +3225,19 @@ function (_PureComponent) {
   return EmoticonItem;
 }(React.PureComponent);
 
+_defineProperty(EmoticonItem, "propTypes", {
+  entity: PropTypes.shape({
+    /** Name for emoticon */
+    name: PropTypes.string,
+
+    /** Native value or actual emoticon */
+    native: PropTypes.string,
+
+    /** Representative character for emoticon */
+    char: PropTypes.string
+  })
+});
+
 var UserItem =
 /*#__PURE__*/
 function (_PureComponent) {
@@ -3188,6 +3264,19 @@ function (_PureComponent) {
 
   return UserItem;
 }(React.PureComponent);
+
+_defineProperty(UserItem, "propTypes", {
+  entity: PropTypes.shape({
+    /** Name of the user */
+    name: PropTypes.string,
+
+    /** Id of the user */
+    id: PropTypes.string,
+
+    /** Image of the user */
+    image: PropTypes.string
+  })
+});
 
 var CommandItem =
 /*#__PURE__*/
@@ -3216,6 +3305,19 @@ function (_PureComponent) {
 
   return CommandItem;
 }(React.PureComponent);
+
+_defineProperty(CommandItem, "propTypes", {
+  entity: PropTypes.shape({
+    /** Name of the command */
+    name: PropTypes.string,
+
+    /** Arguments of command */
+    args: PropTypes.string,
+
+    /** Description of command */
+    description: PropTypes.string
+  })
+});
 
 /**
  * Textarea component with included autocomplete options. You can set your own commands and
@@ -3369,6 +3471,7 @@ function (_PureComponent) {
         trigger: this.getTriggers(),
         replaceWord: this.emojiReplace,
         minChar: 0,
+        maxRows: this.props.maxRows,
         innerRef: innerRef && function (ref) {
           innerRef.current = ref;
         },
@@ -3400,6 +3503,9 @@ _defineProperty(ChatAutoComplete, "propTypes", {
   /** Grow the number of rows of the textarea while you're typing */
   grow: PropTypes.bool,
 
+  /** Maximum number of rows */
+  maxRows: PropTypes.number,
+
   /** Make the textarea disabled */
   disabled: PropTypes.bool,
 
@@ -3420,9 +3526,6 @@ _defineProperty(ChatAutoComplete, "propTypes", {
 
   /** What loading component to use for the auto complete when loading results. */
   LoadingIndicator: PropTypes.node,
-
-  /** function to set up your triggers for autocomplete(eg. '@' for mentions, '/' for commands) */
-  trigger: PropTypes.func,
 
   /** Minimum number of Character */
   minChar: PropTypes.number,
@@ -3515,12 +3618,9 @@ function (_PureComponent) {
     value: function render() {
       var _this2 = this;
 
+      var SendButton = this.props.SendButton;
       return React__default.createElement("div", {
-        style: {
-          position: 'relative',
-          zIndex: 100,
-          width: '100%'
-        }
+        className: "str-chat__input-large"
       }, React__default.createElement(reactFileUtils.ImageDropzone, {
         accept: this.props.acceptedFiles,
         multiple: this.props.multipleUploads,
@@ -3528,7 +3628,9 @@ function (_PureComponent) {
         handleFiles: this.props.uploadNewFiles
       }, React__default.createElement("div", {
         className: "str-chat__input"
-      }, this.renderUploads(), this.renderEmojiPicker(), React__default.createElement(ChatAutoComplete, {
+      }, this.renderUploads(), this.renderEmojiPicker(), React__default.createElement("div", {
+        className: "str-chat__input--textarea-wrapper"
+      }, React__default.createElement(ChatAutoComplete, {
         users: this.props.getUsers(),
         commands: this.props.getCommands(),
         innerRef: this.props.textareaRef,
@@ -3539,6 +3641,7 @@ function (_PureComponent) {
         onSelectItem: this.props.onSelectItem,
         value: this.props.text,
         rows: 1,
+        maxRows: this.props.maxRows,
         placeholder: "Type your message",
         onPaste: this.props.onPaste,
         grow: this.props.grow,
@@ -3567,7 +3670,9 @@ function (_PureComponent) {
       }, React__default.createElement("path", {
         d: "M7 .5c3.59 0 6.5 2.91 6.5 6.5s-2.91 6.5-6.5 6.5S.5 10.59.5 7 3.41.5 7 .5zm0 12c3.031 0 5.5-2.469 5.5-5.5S10.031 1.5 7 1.5A5.506 5.506 0 0 0 1.5 7c0 3.034 2.469 5.5 5.5 5.5zM7.506 3v3.494H11v1.05H7.506V11h-1.05V7.544H3v-1.05h3.456V3h1.05z",
         fillRule: "nonzero"
-      }))))), React__default.createElement("div", null, React__default.createElement("div", {
+      })))), SendButton && React__default.createElement(SendButton, {
+        sendMessage: this.props.handleSubmit
+      }))), React__default.createElement("div", null, React__default.createElement("div", {
         className: "str-chat__input-footer"
       }, React__default.createElement("span", {
         className: "str-chat__input-footer--count ".concat(!this.props.watcher_count ? 'str-chat__input-footer--count--hidden' : '')
@@ -3586,6 +3691,9 @@ _defineProperty(MessageInputLarge, "propTypes", {
 
   /** Grow the textarea while you're typing */
   grow: PropTypes.bool.isRequired,
+
+  /** Specify the max amount of rows the textarea is able to grow */
+  maxRows: PropTypes.number.isRequired,
 
   /** Make the textarea disabled */
   disabled: PropTypes.bool,
@@ -3669,14 +3777,42 @@ _defineProperty(MessageInputLarge, "propTypes", {
   maxNumberOfFiles: PropTypes.object,
 
   /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
-  acceptedFiles: PropTypes.object
+  acceptedFiles: PropTypes.object,
+
+  /**
+   * Custom UI component for send button.
+   *
+   * Defaults to and accepts same props as: [SendButton](https://getstream.github.io/stream-chat-react/#sendbutton)
+   * */
+  SendButton: PropTypes.oneOfType([PropTypes.node, PropTypes.func])
 });
 
+var SendButton = function SendButton(_ref) {
+  var sendMessage = _ref.sendMessage;
+  return React__default.createElement("button", {
+    className: "str-chat__send-button",
+    onClick: sendMessage
+  }, React__default.createElement("svg", {
+    width: "18",
+    height: "17",
+    viewBox: "0 0 18 17",
+    xmlns: "http://www.w3.org/2000/svg"
+  }, React__default.createElement("path", {
+    d: "M0 17.015l17.333-8.508L0 0v6.617l12.417 1.89L0 10.397z",
+    fillRule: "evenodd",
+    fill: "#006cff"
+  })));
+};
+
+if (!Element.prototype.matches) {
+  Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
+}
 /**
  * MessageInput - Input a new message, support for all the rich features such as image uploads, @mentions, emoticons etc.
  * @example ./docs/MessageInput.md
  * @extends PureComponent
  */
+
 
 exports.MessageInput =
 /*#__PURE__*/
@@ -3776,10 +3912,7 @@ function (_PureComponent) {
     }());
 
     _defineProperty(_assertThisInitialized(_this), "getCommands", function () {
-      var config = _this.props.channel.getConfig();
-
-      var allCommands = config.commands;
-      return allCommands;
+      return _this.props.channel.getConfig().commands;
     });
 
     _defineProperty(_assertThisInitialized(_this), "getUsers", function () {
@@ -3808,8 +3941,7 @@ function (_PureComponent) {
         }
       }
 
-      var usersArray = Object.values(userMap);
-      return usersArray;
+      return Object.values(userMap);
     });
 
     _defineProperty(_assertThisInitialized(_this), "handleChange", function (event) {
@@ -3847,29 +3979,51 @@ function (_PureComponent) {
 
       var attachments = _toConsumableArray(_this.state.attachments);
 
+      if (_this.props.message && _this.props.message.attachments) {
+        attachments.push.apply(attachments, _toConsumableArray(_this.props.message.attachments));
+      }
+
       var _iteratorNormalCompletion = true;
       var _didIteratorError = false;
       var _iteratorError = undefined;
 
       try {
-        for (var _iterator = _this.state.imageOrder[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var _id2 = _step.value;
-          var image = _this.state.imageUploads[_id2];
+        var _loop = function _loop() {
+          var id = _step.value;
+          var image = _this.state.imageUploads[id];
 
           if (!image || image.state === 'failed') {
-            continue;
+            return "continue";
           }
 
           if (image.state === 'uploading') {
             // TODO: show error to user that they should wait until image is uploaded
-            return;
+            return {
+              v: void 0
+            };
           }
 
+          var dupe = attachments.filter(function (attach) {
+            return image.url === attach.image_url;
+          });
+          if (dupe.length >= 1) return "continue";
           attachments.push({
             type: 'image',
             image_url: image.url,
             fallback: image.file.name
           });
+        };
+
+        for (var _iterator = _this.state.imageOrder[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var _ret = _loop();
+
+          switch (_ret) {
+            case "continue":
+              continue;
+
+            default:
+              if (_typeof(_ret) === "object") return _ret.v;
+          }
         }
       } catch (err) {
         _didIteratorError = true;
@@ -3892,8 +4046,8 @@ function (_PureComponent) {
 
       try {
         for (var _iterator2 = _this.state.fileOrder[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-          var _id3 = _step2.value;
-          var upload = _this.state.fileUploads[_id3];
+          var _id2 = _step2.value;
+          var upload = _this.state.fileUploads[_id2];
 
           if (!upload || upload.state === 'failed') {
             continue;
@@ -3938,11 +4092,25 @@ function (_PureComponent) {
 
         _this.props.clearEditingState();
 
-        var updateMessagePromise = _this.props.client.updateMessage(updatedMessage).then(function () {
-          _this.props.clearEditingState();
-        });
+        var updateMessagePromise = _this.props.editMessage(updatedMessage).then(_this.props.clearEditingState);
 
         streamChat.logChatPromiseExecution(updateMessagePromise, 'update message');
+      } else if (_this.props.overrideSubmitHandler && typeof _this.props.overrideSubmitHandler === 'function') {
+        _this.props.overrideSubmitHandler({
+          text: text,
+          attachments: attachments,
+          mentioned_users: uniq(_this.state.mentioned_users),
+          parent: _this.props.parent
+        }, _this.props.channel.cid);
+
+        _this.setState({
+          text: '',
+          mentioned_users: [],
+          imageUploads: Immutable({}),
+          imageOrder: [],
+          fileUploads: Immutable({}),
+          fileOrder: []
+        });
       } else {
         var sendMessagePromise = _this.props.sendMessage({
           text: text,
@@ -4361,7 +4529,7 @@ function (_PureComponent) {
       var _ref6 = _asyncToGenerator(
       /*#__PURE__*/
       _regeneratorRuntime.mark(function _callee6(event) {
-        var items, plainTextPromise, _iteratorNormalCompletion4, _didIteratorError4, _iteratorError4, _loop, _iterator4, _step4, _ret, fileLikes, s;
+        var items, plainTextPromise, _iteratorNormalCompletion4, _didIteratorError4, _iteratorError4, _loop2, _iterator4, _step4, _ret2, fileLikes, s;
 
         return _regeneratorRuntime.wrap(function _callee6$(_context6) {
           while (1) {
@@ -4387,7 +4555,7 @@ function (_PureComponent) {
                 _iteratorError4 = undefined;
                 _context6.prev = 7;
 
-                _loop = function _loop() {
+                _loop2 = function _loop2() {
                   var item = _step4.value;
 
                   if (item.kind === 'string' && item.type === 'text/plain') {
@@ -4408,9 +4576,9 @@ function (_PureComponent) {
                   break;
                 }
 
-                _ret = _loop();
+                _ret2 = _loop2();
 
-                if (!(_ret === "break")) {
+                if (!(_ret2 === "break")) {
                   _context6.next = 14;
                   break;
                 }
@@ -4537,11 +4705,11 @@ function (_PureComponent) {
               }
             };
           } else if (attach.type === 'file') {
-            var _id4 = generateRandomId();
+            var _id3 = generateRandomId();
 
-            fileOrder.push(_id4);
-            fileUploads[_id4] = {
-              id: _id4,
+            fileOrder.push(_id3);
+            fileUploads[_id3] = {
+              id: _id3,
               url: attach.asset_url,
               state: 'finished',
               file: {
@@ -4664,6 +4832,9 @@ _defineProperty(exports.MessageInput, "propTypes", {
   /** Grow the textarea while you're typing */
   grow: PropTypes.bool.isRequired,
 
+  /** Set the maximum number of rows */
+  maxRows: PropTypes.number.isRequired,
+
   /** Via Context: the channel that we're sending the message to */
   channel: PropTypes.object.isRequired,
 
@@ -4691,14 +4862,23 @@ _defineProperty(exports.MessageInput, "propTypes", {
   doImageUploadRequest: PropTypes.func,
 
   /** Override file upload request */
-  doFileUploadRequest: PropTypes.func
+  doFileUploadRequest: PropTypes.func,
+
+  /**
+   * Custom UI component for send button.
+   *
+   * Defaults to and accepts same props as: [SendButton](https://getstream.github.io/stream-chat-react/#sendbutton)
+   * */
+  SendButton: PropTypes.oneOfType([PropTypes.node, PropTypes.func])
 });
 
 _defineProperty(exports.MessageInput, "defaultProps", {
   focus: false,
   disabled: false,
   grow: true,
-  Input: MessageInputLarge
+  maxRows: 10,
+  Input: MessageInputLarge,
+  SendButton: SendButton
 });
 
 exports.MessageInput = withChannelContext(exports.MessageInput);
@@ -4794,6 +4974,7 @@ function (_React$Component) {
         onSelectItem: this.props.onSelectItem,
         value: this.props.text,
         rows: 1,
+        maxRows: this.props.maxRows,
         onPaste: this.props.onPaste,
         grow: this.props.grow
       }), React__default.createElement("div", {
@@ -4841,6 +5022,9 @@ _defineProperty(EditMessageForm, "propTypes", {
 
   /** Grow the textarea while you're typing */
   grow: PropTypes.bool,
+
+  /** Specify the max amount of rows the textarea is able to grow */
+  maxRows: PropTypes.number.isRequired,
 
   /** Disable the textarea */
   disabled: PropTypes.bool,
@@ -5146,7 +5330,7 @@ function (_PureComponent) {
           initialMessage = _this$props3.initialMessage,
           channelConfig = _this$props3.channelConfig,
           threadList = _this$props3.threadList,
-          openThread = _this$props3.openThread;
+          handleOpenThread = _this$props3.handleOpenThread;
 
       if (message.type === 'error' || message.type === 'system' || message.type === 'ephemeral' || message.status === 'failed' || message.status === 'sending' || initialMessage) {
         return;
@@ -5156,7 +5340,7 @@ function (_PureComponent) {
         return React__default.createElement("div", {
           className: "str-chat__message-simple__actions"
         }, this.renderMessageActions(), !threadList && channelConfig && channelConfig.replies && React__default.createElement("div", {
-          onClick: openThread,
+          onClick: handleOpenThread,
           className: "str-chat__message-simple__actions__action str-chat__message-simple__actions__action--thread"
         }, React__default.createElement("svg", {
           width: "14",
@@ -5191,7 +5375,7 @@ function (_PureComponent) {
           d: "M11.108 8.05a.496.496 0 0 1 .212.667C10.581 10.147 8.886 11 7 11c-1.933 0-3.673-.882-4.33-2.302a.497.497 0 0 1 .9-.417C4.068 9.357 5.446 10 7 10c1.519 0 2.869-.633 3.44-1.738a.495.495 0 0 1 .668-.212zm.792-1.826a.477.477 0 0 1-.119.692.541.541 0 0 1-.31.084.534.534 0 0 1-.428-.194c-.106-.138-.238-.306-.539-.306-.298 0-.431.168-.54.307A.534.534 0 0 1 9.538 7a.544.544 0 0 1-.31-.084.463.463 0 0 1-.117-.694c.33-.423.742-.722 1.394-.722.653 0 1.068.3 1.396.724zm-7 0a.477.477 0 0 1-.119.692.541.541 0 0 1-.31.084.534.534 0 0 1-.428-.194c-.106-.138-.238-.306-.539-.306-.299 0-.432.168-.54.307A.533.533 0 0 1 2.538 7a.544.544 0 0 1-.31-.084.463.463 0 0 1-.117-.694c.33-.423.742-.722 1.394-.722.653 0 1.068.3 1.396.724zM7 0a7 7 0 1 1 0 14A7 7 0 0 1 7 0zm4.243 11.243A5.96 5.96 0 0 0 13 7a5.96 5.96 0 0 0-1.757-4.243A5.96 5.96 0 0 0 7 1a5.96 5.96 0 0 0-4.243 1.757A5.96 5.96 0 0 0 1 7a5.96 5.96 0 0 0 1.757 4.243A5.96 5.96 0 0 0 7 13a5.96 5.96 0 0 0 4.243-1.757z",
           fillRule: "evenodd"
         }))), !threadList && channelConfig && channelConfig.replies && React__default.createElement("div", {
-          onClick: openThread,
+          onClick: handleOpenThread,
           className: "str-chat__message-simple__actions__action str-chat__message-simple__actions__action--thread"
         }, React__default.createElement("svg", {
           width: "14",
@@ -5202,13 +5386,14 @@ function (_PureComponent) {
           fillRule: "evenodd"
         }))), this.renderMessageActions());
       }
-    }
+    } // eslint-disable-next-line
+
   }, {
     key: "render",
     value: function render() {
       var _this$props4 = this.props,
           message = _this$props4.message,
-          Attachment$$1 = _this$props4.Attachment,
+          Attachment = _this$props4.Attachment,
           editing = _this$props4.editing,
           clearEditingState = _this$props4.clearEditingState,
           handleRetry = _this$props4.handleRetry,
@@ -5221,7 +5406,7 @@ function (_PureComponent) {
           onMentionsClickMessage = _this$props4.onMentionsClickMessage,
           unsafeHTML = _this$props4.unsafeHTML,
           threadList = _this$props4.threadList,
-          openThread = _this$props4.openThread;
+          handleOpenThread = _this$props4.handleOpenThread;
       var when = moment(message.created_at).calendar();
       var messageClasses = this.isMine() ? 'str-chat__message str-chat__message--me str-chat__message-simple str-chat__message-simple--me' : 'str-chat__message str-chat__message-simple';
       var hasAttachment = Boolean(message && message.attachments && message.attachments.length);
@@ -5246,12 +5431,12 @@ function (_PureComponent) {
       return React__default.createElement(React__default.Fragment, null, editing && React__default.createElement(Modal, {
         open: editing,
         onClose: clearEditingState
-      }, React__default.createElement(exports.MessageInput, {
+      }, React__default.createElement(exports.MessageInput, _extends({
         Input: EditMessageForm,
         message: message,
         clearEditingState: clearEditingState,
         updateMessage: updateMessage
-      })), React__default.createElement("div", {
+      }, this.props.additionalMessageInputProps))), React__default.createElement("div", {
         key: message.id,
         className: "\n\t\t\t\t\t\t".concat(messageClasses, "\n\t\t\t\t\t\tstr-chat__message--").concat(message.type, "\n\t\t\t\t\t\tstr-chat__message--").concat(message.status, "\n\t\t\t\t\t\t").concat(message.text ? 'str-chat__message--has-text' : 'has-no-text', "\n\t\t\t\t\t\t").concat(hasAttachment ? 'str-chat__message--has-attachment' : '', "\n\t\t\t\t\t\t").concat(hasReactions ? 'str-chat__message--with-reactions' : '', "\n\t\t\t\t\t").trim(),
         onMouseLeave: this._hideOptions,
@@ -5262,15 +5447,13 @@ function (_PureComponent) {
       }), React__default.createElement("div", {
         className: "str-chat__message-inner",
         onClick: message.status === 'failed' ? handleRetry.bind(this, message) : null
-      }, !message.text && React__default.createElement(React__default.Fragment, null, this.renderOptions(), hasReactions > 0 && !this.state.showDetailedReactions && React__default.createElement(ReactionsList, {
+      }, !message.text && React__default.createElement(React__default.Fragment, null, this.renderOptions(), hasReactions && !this.state.showDetailedReactions && React__default.createElement(ReactionsList, {
         reactions: message.latest_reactions,
         reaction_counts: message.reaction_counts,
         onClick: this._clickReactionList,
         reverse: true
       }), this.state.showDetailedReactions && React__default.createElement(ReactionSelector, {
-        mine: this.isMine(),
         handleReaction: handleReaction,
-        actionsEnabled: actionsEnabled,
         detailedView: true,
         reaction_counts: message.reaction_counts,
         latest_reactions: message.latest_reactions,
@@ -5280,7 +5463,7 @@ function (_PureComponent) {
         className: "str-chat__message-attachment-container"
       }, hasAttachment && message.attachments.map(function (attachment, index) {
         if (attachment.type === 'image' && images.length > 1) return null;
-        return React__default.createElement(Attachment$$1, {
+        return React__default.createElement(Attachment, {
           key: "".concat(message.id, "-").concat(index),
           attachment: attachment,
           actionHandler: handleAction
@@ -5301,7 +5484,7 @@ function (_PureComponent) {
         dangerouslySetInnerHTML: {
           __html: message.html
         }
-      }) : renderText(message), hasReactions > 0 && !this.state.showDetailedReactions && React__default.createElement(ReactionsList, {
+      }) : renderText(message), hasReactions && !this.state.showDetailedReactions && React__default.createElement(ReactionsList, {
         reactions: message.latest_reactions,
         reaction_counts: message.reaction_counts,
         onClick: this._clickReactionList,
@@ -5318,7 +5501,7 @@ function (_PureComponent) {
       })), message.text && this.renderOptions()), !threadList && message.reply_count !== 0 && React__default.createElement("div", {
         className: "str-chat__message-simple-reply-button"
       }, React__default.createElement(MessageRepliesCountButton, {
-        onClick: openThread,
+        onClick: handleOpenThread,
         reply_count: message.reply_count
       })), React__default.createElement("div", {
         className: "str-chat__message-data str-chat__message-simple-data"
@@ -5344,7 +5527,7 @@ _defineProperty(MessageSimple, "propTypes", {
   Attachment: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
 
   /**
-   * @deprecated Its not recommended to use this anymore. All the methods in this HOC are provided explicitely.
+   * @deprecated Its not recommended to use this anymore. All the methods in this HOC are provided explicitly.
    *
    * The higher order message component, most logic is delegated to this component
    * @see See [Message HOC](https://getstream.github.io/stream-chat-react/#message) for example
@@ -5368,7 +5551,7 @@ _defineProperty(MessageSimple, "propTypes", {
   threadList: PropTypes.bool,
 
   /** Function to open thread on current messxage */
-  openThread: PropTypes.func,
+  handleOpenThread: PropTypes.func,
 
   /** If the message is in edit state */
   editing: PropTypes.bool,
@@ -5379,7 +5562,10 @@ _defineProperty(MessageSimple, "propTypes", {
   /** Returns true if message belongs to current user */
   isMyMessage: PropTypes.func,
 
-  /** Returns all allowed actions on message by current user e.g., [edit, delete, flag, mute] */
+  /**
+   * Returns all allowed actions on message by current user e.g., [edit, delete, flag, mute]
+   * Please check [Message](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Message.js) component for default implementation.
+   * */
   getMessageActions: PropTypes.func,
 
   /**
@@ -5432,2025 +5618,22 @@ _defineProperty(MessageSimple, "propTypes", {
    * @param event Dom click event which triggered handler.
    * @param user Target user object
    */
-  onMentionsClickMessage: PropTypes.func
+  onMentionsClickMessage: PropTypes.func,
+
+  /**
+   * Additional props for underlying MessageInput component.
+   * Available props - https://getstream.github.io/stream-chat-react/#messageinput
+   * */
+  additionalMessageInputProps: PropTypes.object
 });
 
 _defineProperty(MessageSimple, "defaultProps", {
   Attachment: Attachment
 });
 
-/**
- * Message - A high level component which implements all the logic required for a message.
- * The actual rendering of the message is delegated via the "Message" property
- *
- * @example ./docs/Message.md
- * @extends Component
- */
+function ownKeys$4(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
-var Message =
-/*#__PURE__*/
-function (_Component) {
-  _inherits(Message, _Component);
-
-  function Message(props) {
-    var _this;
-
-    _classCallCheck(this, Message);
-
-    _this = _possibleConstructorReturn(this, _getPrototypeOf(Message).call(this, props));
-
-    _defineProperty(_assertThisInitialized(_this), "isMyMessage", function (message) {
-      return _this.props.client.user.id === message.user.id;
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "isAdmin", function () {
-      return _this.props.client.user.role === 'admin' || _this.props.members && _this.props.members[_this.props.client.user.id] && _this.props.members[_this.props.client.user.id].role === 'admin';
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "isOwner", function () {
-      return _this.props.members && _this.props.members[_this.props.client.user.id] && _this.props.members[_this.props.client.user.id].role === 'owner';
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "isModerator", function () {
-      return _this.props.members && _this.props.members[_this.props.client.user.id] && _this.props.members[_this.props.client.user.id].role === 'moderator';
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "canEditMessage", function (message) {
-      return _this.isMyMessage(message) || _this.isModerator() || _this.isOwner() || _this.isAdmin();
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "canDeleteMessage", function (message) {
-      return _this.isMyMessage(message) || _this.isModerator() || _this.isOwner() || _this.isAdmin();
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "validateAndGetNotificationMessage", function (func, args) {
-      if (!func || typeof func !== 'function') return false;
-      var returnValue = func.apply(null, args);
-      if (typeof returnValue !== 'string') return false;
-      return returnValue;
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "handleFlag",
-    /*#__PURE__*/
-    function () {
-      var _ref = _asyncToGenerator(
-      /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee(event) {
-        var _this$props, getFlagMessageSuccessNotification, getFlagMessageErrorNotification, message, successMessage, errorMessage;
-
-        return _regeneratorRuntime.wrap(function _callee$(_context) {
-          while (1) {
-            switch (_context.prev = _context.next) {
-              case 0:
-                event.preventDefault();
-                _this$props = _this.props, getFlagMessageSuccessNotification = _this$props.getFlagMessageSuccessNotification, getFlagMessageErrorNotification = _this$props.getFlagMessageErrorNotification;
-                message = _this.props.message;
-                _context.prev = 3;
-                _context.next = 6;
-                return _this.props.client.flagMessage(message.id);
-
-              case 6:
-                successMessage = _this.validateAndGetNotificationMessage(getFlagMessageSuccessNotification, [message]);
-
-                _this.props.addNotification(successMessage ? successMessage : 'Message has been succesfully flagged', 'success');
-
-                _context.next = 14;
-                break;
-
-              case 10:
-                _context.prev = 10;
-                _context.t0 = _context["catch"](3);
-                errorMessage = _this.validateAndGetNotificationMessage(getFlagMessageErrorNotification, [message]);
-
-                _this.props.addNotification(errorMessage ? errorMessage : 'Error adding flag: Either the flag already exist or there is issue with network connection ...', 'error');
-
-              case 14:
-              case "end":
-                return _context.stop();
-            }
-          }
-        }, _callee, null, [[3, 10]]);
-      }));
-
-      return function (_x) {
-        return _ref.apply(this, arguments);
-      };
-    }());
-
-    _defineProperty(_assertThisInitialized(_this), "handleMute",
-    /*#__PURE__*/
-    function () {
-      var _ref2 = _asyncToGenerator(
-      /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee2(event) {
-        var _this$props2, getMuteUserSuccessNotification, getMuteUserErrorNotification, message, successMessage, errorMessage;
-
-        return _regeneratorRuntime.wrap(function _callee2$(_context2) {
-          while (1) {
-            switch (_context2.prev = _context2.next) {
-              case 0:
-                event.preventDefault();
-                _this$props2 = _this.props, getMuteUserSuccessNotification = _this$props2.getMuteUserSuccessNotification, getMuteUserErrorNotification = _this$props2.getMuteUserErrorNotification;
-                message = _this.props.message;
-                _context2.prev = 3;
-                _context2.next = 6;
-                return _this.props.client.muteUser(message.user.id);
-
-              case 6:
-                successMessage = _this.validateAndGetNotificationMessage(getMuteUserSuccessNotification, [message.user]);
-
-                _this.props.addNotification(successMessage ? successMessage : "User with id ".concat(message.user.id, " has been muted"), 'success');
-
-                _context2.next = 14;
-                break;
-
-              case 10:
-                _context2.prev = 10;
-                _context2.t0 = _context2["catch"](3);
-                errorMessage = _this.validateAndGetNotificationMessage(getMuteUserErrorNotification, [message.user]);
-
-                _this.props.addNotification(errorMessage ? errorMessage : 'Error muting a user ...', 'error');
-
-              case 14:
-              case "end":
-                return _context2.stop();
-            }
-          }
-        }, _callee2, null, [[3, 10]]);
-      }));
-
-      return function (_x2) {
-        return _ref2.apply(this, arguments);
-      };
-    }());
-
-    _defineProperty(_assertThisInitialized(_this), "handleEdit", function () {
-      _this.props.setEditingState(_this.props.message);
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "handleDelete",
-    /*#__PURE__*/
-    function () {
-      var _ref3 = _asyncToGenerator(
-      /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee3(event) {
-        var message, data$$1;
-        return _regeneratorRuntime.wrap(function _callee3$(_context3) {
-          while (1) {
-            switch (_context3.prev = _context3.next) {
-              case 0:
-                event.preventDefault();
-                message = _this.props.message;
-                _context3.next = 4;
-                return _this.props.client.deleteMessage(message.id);
-
-              case 4:
-                data$$1 = _context3.sent;
-
-                _this.props.updateMessage(data$$1.message);
-
-              case 6:
-              case "end":
-                return _context3.stop();
-            }
-          }
-        }, _callee3);
-      }));
-
-      return function (_x3) {
-        return _ref3.apply(this, arguments);
-      };
-    }());
-
-    _defineProperty(_assertThisInitialized(_this), "handleReaction",
-    /*#__PURE__*/
-    function () {
-      var _ref4 = _asyncToGenerator(
-      /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee4(reactionType, event) {
-        var userExistingReaction, currentUser, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, _reaction, originalMessage, reactionChangePromise, messageID, reaction;
-
-        return _regeneratorRuntime.wrap(function _callee4$(_context4) {
-          while (1) {
-            switch (_context4.prev = _context4.next) {
-              case 0:
-                if (event !== undefined && event.preventDefault) {
-                  event.preventDefault();
-                }
-
-                userExistingReaction = null;
-                currentUser = _this.props.client.userID;
-                _iteratorNormalCompletion = true;
-                _didIteratorError = false;
-                _iteratorError = undefined;
-                _context4.prev = 6;
-
-                for (_iterator = _this.props.message.own_reactions[Symbol.iterator](); !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                  _reaction = _step.value;
-
-                  // own user should only ever contain the current user id
-                  // just in case we check to prevent bugs with message updates from breaking reactions
-                  if (currentUser === _reaction.user.id && _reaction.type === reactionType) {
-                    userExistingReaction = _reaction;
-                  } else if (currentUser !== _reaction.user.id) {
-                    console.warn("message.own_reactions contained reactions from a different user, this indicates a bug");
-                  }
-                }
-
-                _context4.next = 14;
-                break;
-
-              case 10:
-                _context4.prev = 10;
-                _context4.t0 = _context4["catch"](6);
-                _didIteratorError = true;
-                _iteratorError = _context4.t0;
-
-              case 14:
-                _context4.prev = 14;
-                _context4.prev = 15;
-
-                if (!_iteratorNormalCompletion && _iterator.return != null) {
-                  _iterator.return();
-                }
-
-              case 17:
-                _context4.prev = 17;
-
-                if (!_didIteratorError) {
-                  _context4.next = 20;
-                  break;
-                }
-
-                throw _iteratorError;
-
-              case 20:
-                return _context4.finish(17);
-
-              case 21:
-                return _context4.finish(14);
-
-              case 22:
-                originalMessage = _this.props.message;
-
-                /*
-                - Add the reaction to the local state
-                - Make the API call in the background
-                - If it fails, revert to the old message...
-                 */
-                if (userExistingReaction) {
-                  // this.props.channel.state.removeReaction(userExistingReaction);
-                  reactionChangePromise = _this.props.channel.deleteReaction(_this.props.message.id, userExistingReaction.type);
-                } else {
-                  // add the reaction
-                  messageID = _this.props.message.id;
-                  reaction = {
-                    type: reactionType
-                  }; // this.props.channel.state.addReaction(tmpReaction, this.props.message);
-
-                  reactionChangePromise = _this.props.channel.sendReaction(messageID, reaction);
-                }
-
-                _context4.prev = 24;
-                _context4.next = 27;
-                return reactionChangePromise;
-
-              case 27:
-                _context4.next = 32;
-                break;
-
-              case 29:
-                _context4.prev = 29;
-                _context4.t1 = _context4["catch"](24);
-
-                // revert to the original message if the API call fails
-                _this.props.updateMessage(originalMessage);
-
-              case 32:
-              case "end":
-                return _context4.stop();
-            }
-          }
-        }, _callee4, null, [[6, 10, 14, 22], [15,, 17, 21], [24, 29]]);
-      }));
-
-      return function (_x4, _x5) {
-        return _ref4.apply(this, arguments);
-      };
-    }());
-
-    _defineProperty(_assertThisInitialized(_this), "handleAction",
-    /*#__PURE__*/
-    function () {
-      var _ref5 = _asyncToGenerator(
-      /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee5(name, value, event) {
-        var messageID, formData, data$$1;
-        return _regeneratorRuntime.wrap(function _callee5$(_context5) {
-          while (1) {
-            switch (_context5.prev = _context5.next) {
-              case 0:
-                event.preventDefault();
-                messageID = _this.props.message.id;
-                formData = {};
-                formData[name] = value;
-                _context5.next = 6;
-                return _this.props.channel.sendAction(messageID, formData);
-
-              case 6:
-                data$$1 = _context5.sent;
-
-                if (data$$1 && data$$1.message) {
-                  _this.props.updateMessage(data$$1.message);
-                } else {
-                  _this.props.removeMessage(_this.props.message);
-                }
-
-              case 8:
-              case "end":
-                return _context5.stop();
-            }
-          }
-        }, _callee5);
-      }));
-
-      return function (_x6, _x7, _x8) {
-        return _ref5.apply(this, arguments);
-      };
-    }());
-
-    _defineProperty(_assertThisInitialized(_this), "handleRetry",
-    /*#__PURE__*/
-    function () {
-      var _ref6 = _asyncToGenerator(
-      /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee6(message) {
-        return _regeneratorRuntime.wrap(function _callee6$(_context6) {
-          while (1) {
-            switch (_context6.prev = _context6.next) {
-              case 0:
-                _context6.next = 2;
-                return _this.props.retrySendMessage(message);
-
-              case 2:
-              case "end":
-                return _context6.stop();
-            }
-          }
-        }, _callee6);
-      }));
-
-      return function (_x9) {
-        return _ref6.apply(this, arguments);
-      };
-    }());
-
-    _defineProperty(_assertThisInitialized(_this), "onMentionsClick", function (e) {
-      if (typeof _this.props.onMentionsClick !== 'function') {
-        return;
-      }
-
-      _this.props.onMentionsClick(e, _this.props.message.mentioned_users);
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "onMentionsHover", function (e) {
-      if (typeof _this.props.onMentionsHover !== 'function') {
-        return;
-      }
-
-      _this.props.onMentionsHover(e, _this.props.message.mentioned_users);
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "getMessageActions", function () {
-      var _this$props3 = _this.props,
-          message = _this$props3.message,
-          messageActionsProps = _this$props3.messageActions;
-      var messageActionsAfterPermission = [];
-      var messageActions = [];
-
-      if (messageActionsProps && typeof messageActionsProps === 'boolean') {
-        // If value of messageActionsProps is true, then populate all the possible values
-        messageActions = Object.keys(MESSAGE_ACTIONS);
-      } else if (messageActionsProps && messageActionsProps.length >= 0) {
-        messageActions = _toConsumableArray(messageActionsProps);
-      } else {
-        return [];
-      }
-
-      if (_this.canEditMessage(message) && messageActions.indexOf(MESSAGE_ACTIONS.edit) > -1) {
-        messageActionsAfterPermission.push(MESSAGE_ACTIONS.edit);
-      }
-
-      if (_this.canDeleteMessage(message) && messageActions.indexOf(MESSAGE_ACTIONS.delete) > -1) {
-        messageActionsAfterPermission.push(MESSAGE_ACTIONS.delete);
-      }
-
-      if (!_this.isMyMessage(message) && messageActions.indexOf(MESSAGE_ACTIONS.flag) > -1) {
-        messageActionsAfterPermission.push(MESSAGE_ACTIONS.flag);
-      }
-
-      if (!_this.isMyMessage(message) && messageActions.indexOf(MESSAGE_ACTIONS.mute) > -1) {
-        messageActionsAfterPermission.push(MESSAGE_ACTIONS.mute);
-      }
-
-      return messageActionsAfterPermission;
-    });
-
-    _this.state = {
-      loading: false
-    };
-    return _this;
-  }
-
-  _createClass(Message, [{
-    key: "shouldComponentUpdate",
-    value: function shouldComponentUpdate(nextProps) {
-      // since there are many messages its important to only rerender messages when needed.
-      var shouldUpdate = nextProps.message !== this.props.message;
-
-
-      if (!shouldUpdate && !deepequal(nextProps.readBy, this.props.readBy)) {
-        shouldUpdate = true;
-      } // group style often changes for the last 3 messages...
-
-
-      if (!shouldUpdate && !deepequal(nextProps.groupStyles, this.props.groupStyles)) {
-        shouldUpdate = true;
-      } // if lastreceivedId changesm, message should update.
-
-
-      if (!shouldUpdate && !deepequal(nextProps.lastReceivedId, this.props.lastReceivedId)) {
-        shouldUpdate = true;
-      } // editing is the last one which can trigger a change..
-
-
-      if (!shouldUpdate && nextProps.editing !== this.props.editing) {
-        shouldUpdate = true;
-      } // editing is the last one which can trigger a change..
-
-
-      if (!shouldUpdate && nextProps.messageListRect !== this.props.messageListRect) {
-        shouldUpdate = true;
-      }
-
-      return shouldUpdate;
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      var config = this.props.channel.getConfig();
-      var message = this.props.message;
-      var actionsEnabled = message.type === 'regular' && message.status === 'received';
-      var Component = this.props.Message;
-      return React__default.createElement(Component, _extends({}, this.props, {
-        actionsEnabled: actionsEnabled,
-        Message: this,
-        handleReaction: this.handleReaction,
-        getMessageActions: this.getMessageActions,
-        handleFlag: this.handleFlag,
-        handleMute: this.handleMute,
-        handleAction: this.handleAction,
-        handleDelete: this.handleDelete,
-        handleEdit: this.handleEdit,
-        handleRetry: this.handleRetry,
-        isMyMessage: this.isMyMessage,
-        openThread: this.props.openThread && this.props.openThread.bind(this, message),
-        channelConfig: config,
-        onMentionsClickMessage: this.onMentionsClick,
-        onMentionsHoverMessage: this.onMentionsHover
-      }));
-    }
-  }]);
-
-  return Message;
-}(React.Component);
-
-_defineProperty(Message, "propTypes", {
-  /** The message object */
-  message: PropTypes.object.isRequired,
-
-  /** The client connection object for connecting to Stream */
-  client: PropTypes.object.isRequired,
-
-  /** The current channel this message is displayed in */
-  channel: PropTypes.object.isRequired,
-
-  /** A list of users that have read this message **/
-  readBy: PropTypes.array,
-
-  /** groupStyles, a list of styles to apply to this message. ie. top, bottom, single etc */
-  groupStyles: PropTypes.array,
-
-  /** Editing, if the message is currently being edited */
-  editing: PropTypes.bool,
-
-  /**
-   * Message UI component to display a message in message list.
-   * Avaialble from [channel context](https://getstream.github.io/stream-chat-react/#channelcontext)
-   * */
-  Message: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
-
-  /**
-   * Attachment UI component to display attachment in individual message.
-   * Avaialble from [channel context](https://getstream.github.io/stream-chat-react/#channelcontext)
-   * */
-  Attachment: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
-
-  /** render HTML instead of markdown. Posting HTML is only allowed server-side */
-  unsafeHTML: PropTypes.bool,
-
-  /**
-   * Array of allowed actions on message. e.g. ['edit', 'delete', 'mute', 'flag']
-   * If all the actions need to be disabled, empty array or false should be provided as value of prop.
-   * */
-  messageActions: PropTypes.oneOfType([PropTypes.bool, PropTypes.array]),
-
-  /**
-   * Function that returns message/text as string to be shown as notification, when request for flagging a message is succesful
-   *
-   * This function should accept following params:
-   *
-   * @param message A [message object](https://getstream.io/chat/docs/#message_format) which is flagged.
-   *
-   * */
-  getFlagMessageSuccessNotification: PropTypes.func,
-
-  /**
-   * Function that returns message/text as string to be shown as notification, when request for flagging a message runs into error
-   *
-   * This function should accept following params:
-   *
-   * @param message A [message object](https://getstream.io/chat/docs/#message_format) which is flagged.
-   *
-   * */
-  getFlagMessageErrorNotification: PropTypes.func,
-
-  /**
-   * Function that returns message/text as string to be shown as notification, when request for muting a user is succesful
-   *
-   * This function should accept following params:
-   *
-   * @param user A user object which is being muted
-   *
-   * */
-  getMuteUserSuccessNotification: PropTypes.func,
-
-  /**
-   * Function that returns message/text as string to be shown as notification, when request for muting a user runs into error
-   *
-   * This function should accept following params:
-   *
-   * @param user A user object which is being muted
-   *
-   * */
-  getMuteUserErrorNotification: PropTypes.func,
-
-  /** Latest message id on current channel */
-  lastReceivedId: PropTypes.string,
-
-  /** DOMRect object for parent MessageList component */
-  messageListRect: PropTypes.object,
-
-  /** @see See [Channel Context](https://getstream.github.io/stream-chat-react/#channelcontext) */
-  members: PropTypes.object,
-
-  /**
-   * Function to add custom notification on messagelist
-   *
-   * @param text Notification text to display
-   * @param type Type of notification. 'success' | 'error'
-   * */
-  addNotification: PropTypes.func,
-
-  /** Sets the editing state */
-  setEditingState: PropTypes.func,
-
-  /** @see See [Channel Context](https://getstream.github.io/stream-chat-react/#channelcontext) */
-  updateMessage: PropTypes.func,
-
-  /** @see See [Channel Context](https://getstream.github.io/stream-chat-react/#channelcontext) */
-  removeMessage: PropTypes.func,
-
-  /** @see See [Channel Context](https://getstream.github.io/stream-chat-react/#channelcontext) */
-  retrySendMessage: PropTypes.func,
-
-  /** @see See [Channel Context](https://getstream.github.io/stream-chat-react/#channelcontext) */
-  onMentionsClick: PropTypes.func,
-
-  /** @see See [Channel Context](https://getstream.github.io/stream-chat-react/#channelcontext) */
-  onMentionsHover: PropTypes.func,
-
-  /** @see See [Channel Context](https://getstream.github.io/stream-chat-react/#channelcontext) */
-  openThread: PropTypes.func
-});
-
-_defineProperty(Message, "defaultProps", {
-  Message: MessageSimple,
-  readBy: [],
-  groupStyles: [],
-  Attachment: Attachment,
-  editing: false,
-  messageActions: Object.keys(MESSAGE_ACTIONS)
-});
-
-var ReverseInfiniteScroll =
-/*#__PURE__*/
-function (_Component) {
-  _inherits(ReverseInfiniteScroll, _Component);
-
-  function ReverseInfiniteScroll(props) {
-    var _this;
-
-    _classCallCheck(this, ReverseInfiniteScroll);
-
-    _this = _possibleConstructorReturn(this, _getPrototypeOf(ReverseInfiniteScroll).call(this, props));
-    _this.scrollListener = _this.scrollListener.bind(_assertThisInitialized(_this));
-    _this.scrollEventCount = 0;
-    return _this;
-  }
-
-  _createClass(ReverseInfiniteScroll, [{
-    key: "componentDidMount",
-    value: function componentDidMount() {
-      this.pageLoaded = this.props.pageStart;
-      this.attachScrollListener();
-    }
-  }, {
-    key: "componentWillUnmount",
-    value: function componentWillUnmount() {
-      this.detachScrollListener();
-      this.detachMousewheelListener();
-    } // Set a defaut loader for all your `InfiniteScroll` components
-
-  }, {
-    key: "setDefaultLoader",
-    value: function setDefaultLoader(loader) {
-      this.defaultLoader = loader;
-    }
-  }, {
-    key: "detachMousewheelListener",
-    value: function detachMousewheelListener() {
-      var scrollEl = window;
-
-      if (this.props.useWindow === false) {
-        scrollEl = this.scrollComponent.parentNode;
-      }
-
-      scrollEl.removeEventListener('mousewheel', this.mousewheelListener, this.props.useCapture);
-    }
-  }, {
-    key: "detachScrollListener",
-    value: function detachScrollListener() {
-      var scrollEl = window;
-
-      if (this.props.useWindow === false) {
-        scrollEl = this.getParentElement(this.scrollComponent);
-      }
-
-      scrollEl.removeEventListener('scroll', this.scrollListener, this.props.useCapture);
-      scrollEl.removeEventListener('resize', this.scrollListener, this.props.useCapture);
-    }
-  }, {
-    key: "getParentElement",
-    value: function getParentElement(el) {
-      return el && el.parentNode;
-    }
-  }, {
-    key: "filterProps",
-    value: function filterProps(props) {
-      return props;
-    }
-  }, {
-    key: "attachScrollListener",
-    value: function attachScrollListener() {
-      if (!this.props.hasMore || this.props.isLoading || !this.getParentElement(this.scrollComponent)) {
-        return;
-      }
-
-      var scrollEl = window;
-
-      if (this.props.useWindow === false) {
-        scrollEl = this.getParentElement(this.scrollComponent);
-      }
-
-      scrollEl.addEventListener('mousewheel', this.mousewheelListener, this.props.useCapture);
-      scrollEl.addEventListener('scroll', this.scrollListener, this.props.useCapture);
-      scrollEl.addEventListener('resize', this.scrollListener, this.props.useCapture);
-
-      if (this.props.initialLoad) {
-        this.scrollListener();
-      }
-    }
-  }, {
-    key: "mousewheelListener",
-    value: function mousewheelListener(e) {
-      // Prevents Chrome hangups
-      // See: https://stackoverflow.com/questions/47524205/random-high-content-download-time-in-chrome/47684257#47684257
-      if (e.deltaY === 1) {
-        e.preventDefault();
-      }
-    }
-  }, {
-    key: "scrollListener",
-    value: function scrollListener() {
-      var el = this.scrollComponent;
-      var parentNode = this.getParentElement(el);
-      this.scrollEventCount += 1;
-      var offset;
-      var reverseOffset = parentNode.scrollTop;
-      var standardOffset = el.scrollHeight - parentNode.scrollTop - parentNode.clientHeight;
-
-      if (this.props.isReverse) {
-        offset = reverseOffset;
-      } else {
-        offset = standardOffset;
-      }
-
-      if (this.props.listenToScroll) {
-        this.props.listenToScroll(standardOffset, reverseOffset);
-      } // a reverse infinite scroll element always starts out at position 0
-      // this counter prevent you from loading content before the user even scrolled
-
-
-      if (this.scrollEventCount < 2) {
-        return;
-      } // prevent crazy repeat requests in case you don't have more
-
-
-      if (!this.props.hasMore || this.props.isLoading) {
-        return;
-      } // Here we make sure the element is visible as well as checking the offset
-
-
-      if (offset < Number(this.props.threshold) && el && el.offsetParent !== null) {
-        //this.detachScrollListener();
-        // Call loadMore after detachScrollListener to allow for non-async loadMore functions
-        if (typeof this.props.loadMore === 'function') {
-          this.props.loadMore(this.pageLoaded += 1);
-        }
-      }
-    }
-  }, {
-    key: "calculateOffset",
-    value: function calculateOffset(el, scrollTop) {
-      if (!el) {
-        return 0;
-      }
-
-      return this.calculateTopPosition(el) + (el.offsetHeight - scrollTop - window.innerHeight);
-    }
-  }, {
-    key: "calculateTopPosition",
-    value: function calculateTopPosition(el) {
-      if (!el) {
-        return 0;
-      }
-
-      return el.offsetTop + this.calculateTopPosition(el.offsetParent);
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      var _this2 = this;
-
-      var renderProps = this.filterProps(this.props);
-
-      var children = renderProps.children,
-          element = renderProps.element,
-          hasMore = renderProps.hasMore,
-          initialLoad = renderProps.initialLoad,
-          isReverse = renderProps.isReverse,
-          loader = renderProps.loader,
-          loadMore = renderProps.loadMore,
-          pageStart = renderProps.pageStart,
-          ref = renderProps.ref,
-          threshold = renderProps.threshold,
-          useCapture = renderProps.useCapture,
-          useWindow = renderProps.useWindow,
-          listenToScroll = renderProps.listenToScroll,
-          isLoading = renderProps.isLoading,
-          props = _objectWithoutProperties(renderProps, ["children", "element", "hasMore", "initialLoad", "isReverse", "loader", "loadMore", "pageStart", "ref", "threshold", "useCapture", "useWindow", "listenToScroll", "isLoading"]);
-
-      props.ref = function (node) {
-        _this2.scrollComponent = node;
-
-        if (ref) {
-          ref(node);
-        }
-      };
-
-      var childrenArray = [children];
-
-      if (isLoading) {
-        if (loader) {
-          isReverse ? childrenArray.unshift(loader) : childrenArray.push(loader);
-        } else if (this.defaultLoader) {
-          isReverse ? childrenArray.unshift(this.defaultLoader) : childrenArray.push(this.defaultLoader);
-        }
-      }
-
-      return React__default.createElement(element, props, childrenArray);
-    }
-  }]);
-
-  return ReverseInfiniteScroll;
-}(React.Component);
-
-_defineProperty(ReverseInfiniteScroll, "propTypes", {
-  children: PropTypes.node.isRequired,
-  element: PropTypes.node,
-
-  /** Weather there are more elements to be loaded or not */
-  hasMore: PropTypes.bool,
-  initialLoad: PropTypes.bool,
-  isReverse: PropTypes.bool,
-  loader: PropTypes.node,
-  loadMore: PropTypes.func.isRequired,
-  pageStart: PropTypes.number,
-  ref: PropTypes.func,
-  threshold: PropTypes.number,
-  useCapture: PropTypes.bool,
-  useWindow: PropTypes.bool,
-  className: PropTypes.string,
-
-  /** The function is called when the list scrolls */
-  listenToScroll: PropTypes.func
-});
-
-_defineProperty(ReverseInfiniteScroll, "defaultProps", {
-  element: 'div',
-  hasMore: false,
-  initialLoad: true,
-  pageStart: 0,
-  ref: null,
-  threshold: 250,
-  useWindow: true,
-  isReverse: true,
-  useCapture: false,
-  loader: null,
-  className: 'str-chat__reverse-infinite-scroll'
-});
-
-var MessageNotification =
-/*#__PURE__*/
-function (_PureComponent) {
-  _inherits(MessageNotification, _PureComponent);
-
-  function MessageNotification() {
-    _classCallCheck(this, MessageNotification);
-
-    return _possibleConstructorReturn(this, _getPrototypeOf(MessageNotification).apply(this, arguments));
-  }
-
-  _createClass(MessageNotification, [{
-    key: "render",
-    value: function render() {
-      if (!this.props.showNotification) {
-        return null;
-      } else {
-        return React__default.createElement("button", {
-          className: "str-chat__message-notification",
-          onClick: this.props.onClick
-        }, this.props.children);
-      }
-    }
-  }]);
-
-  return MessageNotification;
-}(React.PureComponent);
-
-_defineProperty(MessageNotification, "propTypes", {
-  /** If we should show the notification or not */
-  showNotification: PropTypes.bool,
-
-  /** Onclick handler */
-  onClick: PropTypes.func.isRequired
-});
-
-_defineProperty(MessageNotification, "defaultProps", {
-  showNotification: true
-});
-
-/**
- * DateSeparator - A simple date seperator
- *
- * @example ./docs/DateSeparator.md
- * @extends PureComponent
- */
-
-var DateSeparator =
-/*#__PURE__*/
-function (_React$PureComponent) {
-  _inherits(DateSeparator, _React$PureComponent);
-
-  function DateSeparator() {
-    _classCallCheck(this, DateSeparator);
-
-    return _possibleConstructorReturn(this, _getPrototypeOf(DateSeparator).apply(this, arguments));
-  }
-
-  _createClass(DateSeparator, [{
-    key: "render",
-    value: function render() {
-      var position = this.props.position;
-
-      if (!Date.parse(this.props.date)) {
-        return null;
-      }
-
-      return React__default.createElement("div", {
-        className: "str-chat__date-separator"
-      }, (position === 'right' || position === 'center') && React__default.createElement("hr", {
-        className: "str-chat__date-separator-line"
-      }), React__default.createElement("div", {
-        className: "str-chat__date-separator-date"
-      }, this.props.formatDate ? this.props.formatDate(this.props.date) : moment(this.props.date.toISOString()).calendar(null, {
-        lastDay: '[Yesterday]',
-        sameDay: '[Today]',
-        nextDay: '[Tomorrow]',
-        lastWeek: '[Last] dddd',
-        nextWeek: 'dddd',
-        sameElse: 'L'
-      })), (position === 'left' || position === 'center') && React__default.createElement("hr", {
-        className: "str-chat__date-separator-line"
-      }));
-    }
-  }]);
-
-  return DateSeparator;
-}(React__default.PureComponent);
-
-_defineProperty(DateSeparator, "propTypes", {
-  /** The date to format */
-  date: PropTypes.instanceOf(Date),
-
-  /** Set the position of the date in the separator */
-  position: PropTypes.oneOf(['left', 'center', 'right']),
-
-  /** Override the default formatting of the date. This is a function that has access to the original date object. Returns a string or Node  */
-  formatDate: PropTypes.func
-});
-
-_defineProperty(DateSeparator, "defaultProps", {
-  position: 'right'
-});
-
-var EventComponent =
-/*#__PURE__*/
-function (_React$PureComponent) {
-  _inherits(EventComponent, _React$PureComponent);
-
-  function EventComponent() {
-    _classCallCheck(this, EventComponent);
-
-    return _possibleConstructorReturn(this, _getPrototypeOf(EventComponent).apply(this, arguments));
-  }
-
-  _createClass(EventComponent, [{
-    key: "render",
-    value: function render() {
-      var message = this.props.message;
-
-      if (message.type === 'system') {
-        return React__default.createElement("div", {
-          className: "str-chat__message--system"
-        }, React__default.createElement("div", {
-          className: "str-chat__message--system__text"
-        }, React__default.createElement("div", {
-          className: "str-chat__message--system__line"
-        }), React__default.createElement("p", null, message.text), React__default.createElement("div", {
-          className: "str-chat__message--system__line"
-        })), React__default.createElement("div", {
-          className: "str-chat__message--system__date"
-        }, React__default.createElement("strong", null, moment(message.created_at).format('dddd'), " "), "at ", moment(message.created_at).format('hh:mm A')));
-      }
-
-      if (message.type === 'channel.event' && (message.event.type === 'member.removed' || message.event.type === 'member.added')) {
-        var sentence;
-
-        switch (message.event.type) {
-          case 'member.removed':
-            sentence = "".concat(message.event.user.name || message.event.user.id, " was removed from the chat");
-            break;
-
-          case 'member.added':
-            sentence = "".concat(message.event.user.name || message.event.user.id, " has joined the chat");
-            break;
-
-          default:
-            break;
-        }
-
-        return React__default.createElement("div", {
-          className: "str-chat__event-component__channel-event"
-        }, React__default.createElement(Avatar, {
-          image: message.event.user.image,
-          name: message.event.user.name || message.event.user.id
-        }), React__default.createElement("div", {
-          className: "str-chat__event-component__channel-event__content"
-        }, React__default.createElement("em", {
-          className: "str-chat__event-component__channel-event__sentence"
-        }, sentence), React__default.createElement("div", {
-          className: "str-chat__event-component__channel-event__date"
-        }, moment(message.created_at).format('LT'))));
-      }
-
-      return null;
-    }
-  }]);
-
-  return EventComponent;
-}(React__default.PureComponent);
-
-/**
- * MessageList - The message list components renders a list of messages. Its a consumer of [Channel Context](https://getstream.github.io/stream-chat-react/#channel)
- *
- * @example ./docs/MessageList.md
- * @extends PureComponent
- */
-
-exports.MessageList =
-/*#__PURE__*/
-function (_PureComponent) {
-  _inherits(MessageList, _PureComponent);
-
-  function MessageList(props) {
-    var _this;
-
-    _classCallCheck(this, MessageList);
-
-    _this = _possibleConstructorReturn(this, _getPrototypeOf(MessageList).call(this, props));
-
-    _defineProperty(_assertThisInitialized(_this), "connectionChanged", function (event) {
-      if (_this.state.online !== event.online) {
-        _this.setState({
-          online: event.online
-        });
-      }
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "keypress", function (event) {
-      if (event.keyCode === KEY_CODES.ESC && _this.state.editing) {
-        _this.clearEditingState();
-      }
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "scrollToBottom", function () {
-      _this._scrollToRef(_this.bottomRef, _this.messageList);
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "_scrollToRef", function (el, parent) {
-      function scrollDown() {
-        if (el && el.current && parent && parent.current) {
-          this.scrollToTarget(el.current, parent.current);
-        }
-      }
-
-      scrollDown.call(_assertThisInitialized(_this)); // scroll down after images load again
-
-      setTimeout(scrollDown.bind(_assertThisInitialized(_this)), 200);
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "scrollToTarget", function (target, containerEl) {
-      // Moved up here for readability:
-      var isElement = target && target.nodeType === 1,
-          isNumber = Object.prototype.toString.call(target) === '[object Number]';
-
-      if (isElement) {
-        containerEl.scrollTop = target.offsetTop;
-      } else if (isNumber) {
-        containerEl.scrollTop = target;
-      } else if (target === 'bottom') {
-        containerEl.scrollTop = containerEl.scrollHeight - containerEl.offsetHeight;
-      } else if (target === 'top') {
-        containerEl.scrollTop = 0;
-      }
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "setEditingState", function (message) {
-      _this.setState({
-        editing: message.id
-      });
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "clearEditingState", function (e) {
-      if (e) {
-        e.preventDefault();
-      }
-
-      _this.setState({
-        editing: ''
-      });
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "insertDates", function (messages) {
-      var newMessages = [];
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = messages.entries()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var _step$value = _slicedToArray(_step.value, 2),
-              i = _step$value[0],
-              message = _step$value[1];
-
-          if (message.type === 'message.read' || message.deleted_at) {
-            newMessages.push(message);
-            continue;
-          }
-
-          var messageDate = message.created_at.getDay();
-          var prevMessageDate = messageDate;
-
-          if (i > 0) {
-            prevMessageDate = messages[i - 1].created_at.getDay();
-          }
-
-          if (i === 0) {
-            newMessages.push({
-              type: 'message.date',
-              date: message.created_at
-            }, message);
-          } else if (messageDate !== prevMessageDate) {
-            newMessages.push({
-              type: 'message.date',
-              date: message.created_at
-            }, message);
-          } else {
-            newMessages.push(message);
-          }
-
-          var eventsNextToMessage = _this.props.eventHistory[message.id || 'first'];
-
-          if (eventsNextToMessage && eventsNextToMessage.length > 0) {
-            eventsNextToMessage.forEach(function (e) {
-              newMessages.push({
-                type: 'channel.event',
-                event: e
-              });
-            });
-          }
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator.return != null) {
-            _iterator.return();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
-
-      return newMessages;
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "goToNewMessages",
-    /*#__PURE__*/
-    _asyncToGenerator(
-    /*#__PURE__*/
-    _regeneratorRuntime.mark(function _callee() {
-      return _regeneratorRuntime.wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              _context.next = 2;
-              return _this.scrollToBottom();
-
-            case 2:
-              _this.setState({
-                newMessagesNotification: false
-              });
-
-            case 3:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, _callee);
-    })));
-
-    _defineProperty(_assertThisInitialized(_this), "getReadStates", function (messages) {
-      // create object with empty array for each message id
-      var readData = {};
-      var _iteratorNormalCompletion2 = true;
-      var _didIteratorError2 = false;
-      var _iteratorError2 = undefined;
-
-      try {
-        for (var _iterator2 = messages[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-          var message = _step2.value;
-          readData[message.id] = [];
-        }
-      } catch (err) {
-        _didIteratorError2 = true;
-        _iteratorError2 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion2 && _iterator2.return != null) {
-            _iterator2.return();
-          }
-        } finally {
-          if (_didIteratorError2) {
-            throw _iteratorError2;
-          }
-        }
-      }
-
-      for (var _i = 0, _Object$values = Object.values(_this.props.read); _i < _Object$values.length; _i++) {
-        var readState = _Object$values[_i];
-
-        if (readState.last_read == null) {
-          break;
-        }
-
-        var userLastReadMsgId = void 0;
-        var _iteratorNormalCompletion3 = true;
-        var _didIteratorError3 = false;
-        var _iteratorError3 = undefined;
-
-        try {
-          for (var _iterator3 = messages[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-            var msg = _step3.value;
-
-            if (msg.updated_at < readState.last_read) {
-              userLastReadMsgId = msg.id;
-            }
-          }
-        } catch (err) {
-          _didIteratorError3 = true;
-          _iteratorError3 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion3 && _iterator3.return != null) {
-              _iterator3.return();
-            }
-          } finally {
-            if (_didIteratorError3) {
-              throw _iteratorError3;
-            }
-          }
-        }
-
-        if (userLastReadMsgId != null) {
-          readData[userLastReadMsgId] = [].concat(_toConsumableArray(readData[userLastReadMsgId]), [readState.user]);
-        }
-      }
-
-      return readData;
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "userScrolledUp", function () {
-      return _this.scrollOffset > 310;
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "listenToScroll", function (offset) {
-      _this.scrollOffset = offset;
-
-      if (_this.state.newMessagesNotification && !_this.userScrolledUp()) {
-        _this.setState({
-          newMessagesNotification: false
-        });
-      }
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "getLastReceived", function (messages) {
-      var l = messages.length;
-      var lastReceivedId = null;
-
-      for (var i = l; i > 0; i--) {
-        if (messages[i] !== undefined && messages[i].status !== undefined && messages[i].status === 'received') {
-          lastReceivedId = messages[i].id;
-          break;
-        }
-      }
-
-      return lastReceivedId;
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "getGroupStyles", function (m) {
-      var l = m.length;
-      var messageGroupStyles = {};
-
-      var messages = _toConsumableArray(m);
-
-      for (var i = 0; i < l; i++) {
-        var previousMessage = messages[i - 1];
-        var message = messages[i];
-        var nextMessage = messages[i + 1];
-        var groupStyles = [];
-
-        if (message.type === 'message.date') {
-          continue;
-        }
-
-        if (message.type === 'channel.event') {
-          continue;
-        }
-
-        var userId = message.user.id;
-        var isTopMessage = !previousMessage || previousMessage.type === 'message.date' || previousMessage.type === 'system' || previousMessage.type === 'channel.event' || previousMessage.attachments.length !== 0 || userId !== previousMessage.user.id || previousMessage.type === 'error' || previousMessage.deleted_at;
-        var isBottomMessage = !nextMessage || nextMessage.type === 'message.date' || nextMessage.type === 'system' || nextMessage.type === 'channel.event' || nextMessage.attachments.length !== 0 || userId !== nextMessage.user.id || nextMessage.type === 'error' || nextMessage.deleted_at;
-
-        if (isTopMessage) {
-          groupStyles.push('top');
-        }
-
-        if (isBottomMessage) {
-          if (isTopMessage || message.deleted_at || message.type === 'error') {
-            groupStyles.splice(0, groupStyles.length);
-            groupStyles.push('single');
-          } else {
-            groupStyles.push('bottom');
-          }
-        }
-
-        if (!isTopMessage && !isBottomMessage) {
-          if (message.deleted_at || message.type === 'error') {
-            groupStyles.splice(0, groupStyles.length);
-            groupStyles.push('single');
-          } else {
-            groupStyles.splice(0, groupStyles.length);
-            groupStyles.push('middle');
-          }
-        }
-
-        if (message.attachments.length !== 0) {
-          groupStyles.splice(0, groupStyles.length);
-          groupStyles.push('single');
-        }
-
-        if (_this.props.noGroupByUser) {
-          groupStyles.splice(0, groupStyles.length);
-          groupStyles.push('single');
-        }
-
-        messageGroupStyles[message.id] = groupStyles;
-      }
-
-      return messageGroupStyles;
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "_onMentionsHoverOrClick", function (e, mentioned_users) {
-      if (!_this.props.onMentionsHover || !_this.props.onMentionsClick) return;
-      var tagName = e.target.tagName.toLowerCase();
-      var textContent = e.target.innerHTML.replace('*', '');
-
-      if (tagName === 'strong' && textContent[0] === '@') {
-        var userName = textContent.replace('@', '');
-        var user = mentioned_users.find(function (user) {
-          return user.name === userName || user.id === userName;
-        });
-
-        if (_this.props.onMentionsHover && e.type === 'mouseover') {
-          _this.props.onMentionsHover(e, user);
-        }
-
-        if (_this.props.onMentionsClick && e.type === 'click') {
-          _this.props.onMentionsHover(e, user);
-        }
-      }
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "addNotification", function (notificationText, type) {
-      if (typeof notificationText !== 'string') return;
-      if (type !== 'success' && type !== 'error') return;
-      var nextIndex = new Date();
-
-      var newNotifications = _toConsumableArray(_this.state.notifications);
-
-      newNotifications.push({
-        id: nextIndex,
-        text: notificationText,
-        type: type
-      });
-
-      _this.setState({
-        notifications: newNotifications
-      }); // remove the notification after 5000 ms
-
-
-      var ct = setTimeout(function () {
-        var index = _this.state.notifications.findIndex(function (notification) {
-          if (notification.id === nextIndex) return true;
-          return false;
-        });
-
-        var newNotifications = _toConsumableArray(_this.state.notifications);
-
-        newNotifications.splice(index, 1);
-
-        _this.setState({
-          notifications: newNotifications
-        });
-      }, 5000);
-
-      _this.notificationTimeouts.push(ct);
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "_loadMore", function () {
-      return _this.props.messageLimit ? _this.props.loadMore(_this.props.messageLimit) : _this.props.loadMore();
-    });
-
-    _this.state = {
-      newMessagesNotification: false,
-      editing: '',
-      online: true,
-      notifications: []
-    };
-    _this.bottomRef = React__default.createRef();
-    _this.messageList = React__default.createRef();
-    _this.messageRefs = {};
-    _this.notificationTimeouts = [];
-    return _this;
-  }
-
-  _createClass(MessageList, [{
-    key: "componentDidMount",
-    value: function componentDidMount() {
-      // start at the bottom
-      this.scrollToBottom();
-      var messageListRect = this.messageList.current.getBoundingClientRect();
-      this.setState({
-        messageListRect: messageListRect
-      });
-      this.props.client.on('connection.changed', this.connectionChanged);
-      document.addEventListener('keydown', this.keypress);
-    }
-  }, {
-    key: "componentWillUnmount",
-    value: function componentWillUnmount() {
-      this.props.client.off('connection.changed', this.connectionChanged);
-      document.removeEventListener('keydown', this.keypress);
-      this.notificationTimeouts.forEach(function (ct) {
-        clearTimeout(ct);
-      });
-    }
-  }, {
-    key: "getSnapshotBeforeUpdate",
-    value: function getSnapshotBeforeUpdate(prevProps) {
-      if (this.props.threadList) {
-        return null;
-      } // Are we adding new items to the list?
-      // Capture the scroll position so we can adjust scroll later.
-
-
-      if (prevProps.messages.length < this.props.messages.length || !deepequal(this.props.eventHistory, prevProps.eventHistory)) {
-        var list = this.messageList.current;
-        var pos = list.scrollHeight - list.scrollTop;
-        return pos;
-      }
-
-      return null;
-    }
-  }, {
-    key: "componentDidUpdate",
-    value: function componentDidUpdate(prevProps, prevState, snapshot) {
-      var _this2 = this;
-
-      // If we have a snapshot value, we've just added new items.
-      // Adjust scroll so these new items don't push the old ones out of view.
-      // (snapshot here is the value returned from getSnapshotBeforeUpdate)
-      if (snapshot !== null) {
-        var list = this.messageList.current; // const scrollDown = () => {
-        //   list.scrollTop = list.scrollHeight - snapshot;
-        // };
-        // scrollDown();
-        // setTimeout(scrollDown, 100);
-
-        this.scrollToTarget(list.scrollHeight - snapshot, this.messageList.current); // scroll down after images load again
-
-        if (this.props.messages.length > 0 && this.props.messages[this.props.messages.length - 1].user.id !== this.props.client.user.id) {
-          setTimeout(function () {
-            return _this2.scrollToTarget(list.scrollHeight - snapshot, _this2.messageList.current);
-          }, 100);
-        }
-      } // handle new messages being sent/received
-
-
-      var currentLastMessage = this.props.messages[this.props.messages.length - 1];
-      var previousLastMessage = prevProps.messages[prevProps.messages.length - 1];
-
-      if (!previousLastMessage || !currentLastMessage) {
-        return;
-      }
-
-      var hasNewMessage = currentLastMessage.id !== previousLastMessage.id;
-      var userScrolledUp = this.userScrolledUp();
-      var isOwner = currentLastMessage.user.id === this.props.client.userID;
-      var scrollToBottom = false; // always scroll down when it's your own message that you added...
-
-      if (hasNewMessage && isOwner) {
-        scrollToBottom = true;
-      } else if (hasNewMessage && !userScrolledUp) {
-        scrollToBottom = true;
-      }
-
-      if (scrollToBottom) {
-        this.scrollToBottom();
-      } // Check the scroll position... if you're scrolled up show a little notification
-
-
-      if (!scrollToBottom && hasNewMessage && !this.state.newMessagesNotification) {
-        this.setState({
-          newMessagesNotification: true
-        });
-      } // remove the scroll notification if we already scrolled down...
-
-
-      if (scrollToBottom && this.state.newMessagesNotification) {
-        this.setState({
-          newMessagesNotification: false
-        });
-      }
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      var _this3 = this;
-
-      var allMessages = _toConsumableArray(this.props.messages);
-
-      allMessages = this.insertDates(allMessages);
-      var messageGroupStyles = this.getGroupStyles(allMessages);
-      var TypingIndicator = this.props.TypingIndicator;
-      var DateSeparator$$1 = this.props.dateSeparator; // sort by date
-
-      allMessages.sort(function (a, b) {
-        return a.created_at - b.created_at;
-      }); // get the readData
-
-      var readData = this.getReadStates(allMessages);
-      var lastReceivedId = this.getLastReceived(allMessages);
-      var elements = []; // loop over the messages
-
-      var _iteratorNormalCompletion4 = true;
-      var _didIteratorError4 = false;
-      var _iteratorError4 = undefined;
-
-      try {
-        for (var _iterator4 = allMessages[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-          var message = _step4.value;
-
-          if (message.id) {
-            this.messageRefs[message.id] = React__default.createRef();
-          }
-
-          if (message.type === 'message.date') {
-            if (this.props.threadList) {
-              continue;
-            }
-
-            elements.push(React__default.createElement("li", {
-              key: message.date.toISOString() + '-i'
-            }, React__default.createElement(DateSeparator$$1, {
-              date: message.date
-            })));
-          } else if (message.type === 'channel.event' || message.type === 'system') {
-            elements.push(React__default.createElement("li", {
-              key: message.type === 'system' ? message.created_at : message.type === 'channel.event' ? message.event.created_at : ''
-            }, React__default.createElement(EventComponent, {
-              message: message
-            })));
-          } else if (message.type !== 'message.read') {
-            var groupStyles = messageGroupStyles[message.id];
-
-            if (!groupStyles) {
-              groupStyles = [];
-            }
-
-            var readBy = readData[message.id] || [];
-            elements.push(React__default.createElement("li", {
-              className: "str-chat__li str-chat__li--".concat(groupStyles),
-              key: message.id || message.created_at,
-              ref: this.messageRefs[message.id]
-            }, React__default.createElement(Message, {
-              client: this.props.client,
-              openThread: this.props.openThread,
-              members: this.props.members,
-              watchers: this.props.watchers,
-              message: message,
-              groupStyles: groupStyles,
-              readBy: readBy,
-              lastReceivedId: lastReceivedId === message.id ? lastReceivedId : null,
-              editing: !!(this.state.editing && this.state.editing === message.id),
-              clearEditingState: this.clearEditingState,
-              setEditingState: this.setEditingState,
-              messageListRect: this.state.messageListRect,
-              channel: this.props.channel,
-              threadList: this.props.threadList,
-              retrySendMessage: this.props.retrySendMessage,
-              addNotification: this.addNotification,
-              updateMessage: this.props.updateMessage,
-              removeMessage: this.props.removeMessage,
-              Message: this.props.Message,
-              unsafeHTML: this.props.unsafeHTML,
-              Attachment: this.props.Attachment,
-              onMentionsClick: this.props.onMentionsClick,
-              onMentionsHover: this.props.onMentionsHover,
-              messageActions: this.props.messageActions,
-              getFlagMessageSuccessNotification: this.props.getFlagMessageSuccessNotification,
-              getFlagMessageErrorNotification: this.props.getFlagMessageErrorNotification,
-              getMuteUserSuccessNotification: this.props.getMuteUserSuccessNotification,
-              getMuteUserErrorNotification: this.props.getMuteUserErrorNotification
-            })));
-          }
-        }
-      } catch (err) {
-        _didIteratorError4 = true;
-        _iteratorError4 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion4 && _iterator4.return != null) {
-            _iterator4.return();
-          }
-        } finally {
-          if (_didIteratorError4) {
-            throw _iteratorError4;
-          }
-        }
-      }
-
-      return React__default.createElement(React__default.Fragment, null, React__default.createElement("div", {
-        className: "str-chat__list ".concat(this.props.threadList ? 'str-chat__list--thread' : ''),
-        ref: this.messageList
-      }, React__default.createElement(ReverseInfiniteScroll, {
-        loadMore: this._loadMore,
-        hasMore: this.props.hasMore,
-        isLoading: this.props.loadingMore,
-        listenToScroll: this.listenToScroll,
-        useWindow: false,
-        loader: React__default.createElement(Center, {
-          key: "loadingindicator"
-        }, React__default.createElement(LoadingIndicator, {
-          size: 20
-        }))
-      }, React__default.createElement("ul", {
-        className: "str-chat__ul"
-      }, elements), this.props.TypingIndicator && React__default.createElement(TypingIndicator, {
-        typing: this.props.typing,
-        client: this.props.client
-      }), React__default.createElement("div", {
-        key: "bottom",
-        ref: this.bottomRef
-      }))), React__default.createElement("div", {
-        className: "str-chat__list-notifications"
-      }, this.state.notifications.map(function (notification) {
-        return React__default.createElement(Notification, {
-          active: true,
-          key: notification.id,
-          type: notification.type
-        }, notification.text);
-      }), React__default.createElement(Notification, {
-        active: !this.state.online,
-        type: "error"
-      }, "Connection failure, reconnecting now..."), React__default.createElement(MessageNotification, {
-        showNotification: this.state.newMessagesNotification,
-        onClick: function onClick() {
-          return _this3.goToNewMessages();
-        }
-      }, "New Messages!")));
-    }
-  }]);
-
-  return MessageList;
-}(React.PureComponent);
-
-_defineProperty(exports.MessageList, "propTypes", {
-  /**
-   * Typing indicator UI component to render
-   *
-   * Defaults to and accepts same props as: [TypingIndicator](https://github.com/GetStream/stream-chat-react/blob/master/src/components/TypingIndicator.js)
-   * */
-  TypingIndicator: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
-
-  /**
-   * Date separator UI component to render
-   *
-   * Defaults to and accepts same props as: [DateSeparator](https://github.com/GetStream/stream-chat-react/blob/master/src/components/DateSeparator.js)
-   * */
-  dateSeparator: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
-
-  /** Turn off grouping of messages by user */
-  noGroupByUser: PropTypes.bool,
-
-  /** render HTML instead of markdown. Posting HTML is only allowed server-side */
-  unsafeHTML: PropTypes.bool,
-
-  /** Set the limit to use when paginating messages */
-  messageLimit: PropTypes.number,
-
-  /**
-   * Array of allowed actions on message. e.g. ['edit', 'delete', 'mute', 'flag']
-   * If all the actions need to be disabled, empty array or false should be provided as value of prop.
-   * */
-  messageActions: PropTypes.oneOfType([PropTypes.bool, PropTypes.array]),
-
-  /**
-   * Boolean weather current message list is a thread.
-   */
-  threadList: PropTypes.bool,
-
-  /**
-   * Function that returns message/text as string to be shown as notification, when request for flagging a message is succesful
-   *
-   * This function should accept following params:
-   *
-   * @param message A [message object](https://getstream.io/chat/docs/#message_format) which is flagged.
-   *
-   * */
-  getFlagMessageSuccessNotification: PropTypes.func,
-
-  /**
-   * Function that returns message/text as string to be shown as notification, when request for flagging a message runs into error
-   *
-   * This function should accept following params:
-   *
-   * @param message A [message object](https://getstream.io/chat/docs/#message_format) which is flagged.
-   *
-   * */
-  getFlagMessageErrorNotification: PropTypes.func,
-
-  /**
-   * Function that returns message/text as string to be shown as notification, when request for muting a user is succesful
-   *
-   * This function should accept following params:
-   *
-   * @param user A user object which is being muted
-   *
-   * */
-  getMuteUserSuccessNotification: PropTypes.func,
-
-  /**
-   * Function that returns message/text as string to be shown as notification, when request for muting a user runs into error
-   *
-   * This function should accept following params:
-   *
-   * @param user A user object which is being muted
-   *
-   * */
-  getMuteUserErrorNotification: PropTypes.func,
-
-  /** **Available from [chat context](https://getstream.github.io/stream-chat-react/#chat)** */
-  client: PropTypes.object,
-
-  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
-  Attachment: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
-
-  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
-  Message: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
-
-  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
-  messages: PropTypes.array.isRequired,
-
-  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
-  channel: PropTypes.object.isRequired,
-
-  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
-  updateMessage: PropTypes.func.isRequired,
-
-  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
-  retrySendMessage: PropTypes.func,
-
-  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
-  removeMessage: PropTypes.func,
-
-  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
-  onMentionsClick: PropTypes.func,
-
-  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
-  onMentionsHover: PropTypes.func,
-
-  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
-  openThread: PropTypes.func,
-
-  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
-  members: PropTypes.object,
-
-  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
-  watchers: PropTypes.object,
-
-  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
-  read: PropTypes.object,
-
-  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
-  typing: PropTypes.object
-});
-
-_defineProperty(exports.MessageList, "defaultProps", {
-  Message: MessageSimple,
-  threadList: false,
-  Attachment: Attachment,
-  dateSeparator: DateSeparator,
-  unsafeHTML: false,
-  noGroupByUser: false,
-  messageActions: Object.keys(MESSAGE_ACTIONS)
-});
-
-exports.MessageList = withChannelContext(exports.MessageList);
-
-var Center = function Center(_ref2) {
-  var children = _ref2.children;
-  return React__default.createElement("div", {
-    style: {
-      width: 100 + '%',
-      display: 'flex',
-      justifyContent: 'center'
-    }
-  }, children);
-};
-
-var Notification = function Notification(_ref3) {
-  var children = _ref3.children,
-      active = _ref3.active,
-      type = _ref3.type;
-
-  if (active) {
-    return React__default.createElement("div", {
-      className: "str-chat__custom-notification notification-".concat(type)
-    }, children);
-  }
-
-  return null;
-};
-
-var colors = ['light', 'dark'];
-var baseUseCases = ['messaging', 'team', 'commerce', 'gaming', 'livestream'];
-
-for (var _i = 0, _colors = colors; _i < _colors.length; _i++) {
-  var color = _colors[_i];
-
-  for (var _i2 = 0, _baseUseCases = baseUseCases; _i2 < _baseUseCases.length; _i2++) {
-    var useCase = _baseUseCases[_i2];
-  }
-}
-/**
- * Chat - Wrapper component for Chat. The needs to be placed around any other chat components.
- * This Chat component provides the ChatContext to all other components.
- *
- * The ChatContext provides the following props:
- *
- * - client (the client connection)
- * - channels (the list of channels)
- * - setActiveChannel (a function to set the currently active channel)
- * - channel (the currently active channel)
- *
- * It also exposes the withChatContext HOC which you can use to consume the ChatContext
- *
- * @example ./docs/Chat.md
- * @extends PureComponent
- */
-
-
-var Chat =
-/*#__PURE__*/
-function (_PureComponent) {
-  _inherits(Chat, _PureComponent);
-
-  function Chat(props) {
-    var _this;
-
-    _classCallCheck(this, Chat);
-
-    _this = _possibleConstructorReturn(this, _getPrototypeOf(Chat).call(this, props));
-
-    _defineProperty(_assertThisInitialized(_this), "setActiveChannel", function (channel, e) {
-      if (e !== undefined && e.preventDefault) {
-        e.preventDefault();
-      }
-
-      _this.setState(function () {
-        return {
-          channel: channel
-        };
-      });
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "getContext", function () {
-      return {
-        client: _this.props.client,
-        channel: _this.state.channel,
-        setActiveChannel: _this.setActiveChannel,
-        theme: _this.props.theme
-      };
-    });
-
-    _this.state = {
-      // currently active channel
-      channel: {},
-      error: false
-    };
-    return _this;
-  }
-
-  _createClass(Chat, [{
-    key: "render",
-    value: function render() {
-      return React__default.createElement(ChatContext.Provider, {
-        value: this.getContext()
-      }, this.props.children);
-    }
-  }]);
-
-  return Chat;
-}(React.PureComponent);
-
-_defineProperty(Chat, "propTypes", {
-  /** The StreamChat client object */
-  client: PropTypes.object.isRequired,
-
-  /**
-   *
-   * Theme could be used for custom styling of the components.
-   *
-   * You can override the classes used in our components under parent theme class.
-   *
-   * e.g. If you want to build a theme where background of message is black
-   *
-   * ```
-   *  <Chat client={client} theme={demo}>
-   *    <Channel>
-   *      <MessageList />
-   *    </Channel>
-   *  </Chat>
-   * ```
-   *
-   * ```scss
-   *  .demo.str-chat {
-   *    .str-chat__message-simple {
-   *      &-text-inner {
-   *        background-color: black;
-   *      }
-   *    }
-   *  }
-   * ```
-   *
-   * Built in available themes:
-   *
-   *  - `messaging light`
-   *  - `messaging dark`
-   *  - `team light`
-   *  - `team dark`
-   *  - `commerce light`
-   *  - `commerce dark`
-   *  - `gaming light`
-   *  - `gaming dark`
-   *  - `livestream light`
-   *  - `livestream dark`
-   */
-  theme: PropTypes.string
-});
-
-_defineProperty(Chat, "defaultProps", {
-  theme: 'messaging light'
-});
-
-/**
- * LoadingErrorIndicator - UI component for error indicator in Channel.
- *
- * @example ./docs/LoadingErrorIndicator.md
- * @extends PureComponent
- */
-
-var LoadingErrorIndicator =
-/*#__PURE__*/
-function (_React$PureComponent) {
-  _inherits(LoadingErrorIndicator, _React$PureComponent);
-
-  function LoadingErrorIndicator() {
-    _classCallCheck(this, LoadingErrorIndicator);
-
-    return _possibleConstructorReturn(this, _getPrototypeOf(LoadingErrorIndicator).apply(this, arguments));
-  }
-
-  _createClass(LoadingErrorIndicator, [{
-    key: "render",
-    value: function render() {
-      if (!this.props.error) return null;
-      return React__default.createElement("div", null, "Error: ", this.props.error.message);
-    }
-  }]);
-
-  return LoadingErrorIndicator;
-}(React__default.PureComponent);
-
-_defineProperty(LoadingErrorIndicator, "propTypes", {
-  /** Error object */
-  error: PropTypes.oneOfType([PropTypes.object, PropTypes.bool])
-});
-
-_defineProperty(LoadingErrorIndicator, "defaultProps", {
-  error: false
-});
-
-function ownKeys$4(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { keys.push.apply(keys, Object.getOwnPropertySymbols(object)); } if (enumerableOnly) keys = keys.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); return keys; }
-
-function _objectSpread$4(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$4(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$4(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread$4(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$4(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$4(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 /**
  * Channel - Wrapper component for a channel. It needs to be place inside of the Chat component.
  * ChannelHeader, MessageList, Thread and MessageInput should be used as children of the Channel component.
@@ -7554,7 +5737,30 @@ _defineProperty(exports.Channel, "propTypes", {
    * @param {Event} event DOM hover event
    * @param {User} user   Target [user object](https://getstream.io/chat/docs/#chat-doc-set-user) which is hovered
    */
-  onMentionsHover: PropTypes.func
+  onMentionsHover: PropTypes.func,
+
+  /** Weather to allow multiple attachment uploads */
+  multipleUploads: PropTypes.bool,
+
+  /** List of accepted file types */
+  acceptedFiles: PropTypes.array,
+
+  /** Maximum number of attachments allowed per message */
+  maxNumberOfFiles: PropTypes.number,
+
+  /** Override send message request (Advanced usage only)
+   *
+   * @param {String} channelId full channel ID in format of `type:id`
+   * @param {Object} message
+   */
+  doSendMessageRequest: PropTypes.func,
+
+  /** Override update(edit) message request (Advanced usage only)
+   *
+   * @param {String} channelId full channel ID in format of `type:id`
+   * @param {Object} updatedMessage
+   */
+  doUpdateMessageRequest: PropTypes.func
 });
 
 _defineProperty(exports.Channel, "defaultProps", {
@@ -7684,7 +5890,7 @@ function (_PureComponent2) {
 
     _defineProperty(_assertThisInitialized(_this2), "createMessagePreview", function (text, attachments, parent, mentioned_users) {
       // create a preview of the message
-      var clientSideID = "".concat(_this2.props.client.userID, "-") + uuidv4();
+      var clientSideID = "".concat(_this2.props.client.userID, "-") + uuid.v4();
       var message = {
         text: text,
         html: text,
@@ -7709,6 +5915,14 @@ function (_PureComponent2) {
       return message;
     });
 
+    _defineProperty(_assertThisInitialized(_this2), "editMessage", function (updatedMessage) {
+      if (_this2.props.doUpdateMessageRequest) {
+        return Promise.resolve(_this2.props.doUpdateMessageRequest(_this2.props.channel.cid, updatedMessage));
+      }
+
+      return _this2.props.client.updateMessage(updatedMessage);
+    });
+
     _defineProperty(_assertThisInitialized(_this2), "_sendMessage",
     /*#__PURE__*/
     function () {
@@ -7729,12 +5943,28 @@ function (_PureComponent2) {
                   parent_id: parent_id
                 };
                 _context2.prev = 2;
-                _context2.next = 5;
+
+                if (!_this2.props.doSendMessageRequest) {
+                  _context2.next = 9;
+                  break;
+                }
+
+                _context2.next = 6;
+                return _this2.props.doSendMessageRequest(_this2.props.channel.cid, messageData);
+
+              case 6:
+                messageResponse = _context2.sent;
+                _context2.next = 12;
+                break;
+
+              case 9:
+                _context2.next = 11;
                 return _this2.props.channel.sendMessage(messageData);
 
-              case 5:
+              case 11:
                 messageResponse = _context2.sent;
 
+              case 12:
                 // replace it after send is completed
                 if (messageResponse.message) {
                   messageResponse.message.status = 'received';
@@ -7742,23 +5972,23 @@ function (_PureComponent2) {
                   _this2.updateMessage(messageResponse.message);
                 }
 
-                _context2.next = 13;
+                _context2.next = 19;
                 break;
 
-              case 9:
-                _context2.prev = 9;
+              case 15:
+                _context2.prev = 15;
                 _context2.t0 = _context2["catch"](2);
                 // set the message to failed..
                 message.status = 'failed';
 
                 _this2.updateMessage(message);
 
-              case 13:
+              case 19:
               case "end":
                 return _context2.stop();
             }
           }
-        }, _callee2, null, [[2, 9]]);
+        }, _callee2, null, [[2, 15]]);
       }));
 
       return function (_x) {
@@ -7769,16 +5999,16 @@ function (_PureComponent2) {
     _defineProperty(_assertThisInitialized(_this2), "sendMessage",
     /*#__PURE__*/
     function () {
-      var _ref4 = _asyncToGenerator(
+      var _ref3 = _asyncToGenerator(
       /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee3(_ref3) {
-        var text, _ref3$attachments, attachments, _ref3$mentioned_users, mentioned_users, parent, messagePreview;
+      _regeneratorRuntime.mark(function _callee3(_ref4) {
+        var text, _ref4$attachments, attachments, _ref4$mentioned_users, mentioned_users, parent, messagePreview;
 
         return _regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
             switch (_context3.prev = _context3.next) {
               case 0:
-                text = _ref3.text, _ref3$attachments = _ref3.attachments, attachments = _ref3$attachments === void 0 ? [] : _ref3$attachments, _ref3$mentioned_users = _ref3.mentioned_users, mentioned_users = _ref3$mentioned_users === void 0 ? [] : _ref3$mentioned_users, parent = _ref3.parent;
+                text = _ref4.text, _ref4$attachments = _ref4.attachments, attachments = _ref4$attachments === void 0 ? [] : _ref4$attachments, _ref4$mentioned_users = _ref4.mentioned_users, mentioned_users = _ref4$mentioned_users === void 0 ? [] : _ref4$mentioned_users, parent = _ref4.parent;
 
                 // remove error messages upon submit
                 _this2.props.channel.state.filterErrorMessages(); // create a local preview message to show in the UI
@@ -7804,7 +6034,7 @@ function (_PureComponent2) {
       }));
 
       return function (_x2) {
-        return _ref4.apply(this, arguments);
+        return _ref3.apply(this, arguments);
       };
     }());
 
@@ -7926,72 +6156,93 @@ function (_PureComponent2) {
 
     _defineProperty(_assertThisInitialized(_this2), "loadMore",
     /*#__PURE__*/
-    _asyncToGenerator(
-    /*#__PURE__*/
-    _regeneratorRuntime.mark(function _callee5() {
-      var limit,
-          oldestID,
-          perPage,
-          queryResponse,
-          hasMore,
-          _args5 = arguments;
-      return _regeneratorRuntime.wrap(function _callee5$(_context5) {
-        while (1) {
-          switch (_context5.prev = _context5.next) {
-            case 0:
-              limit = _args5.length > 0 && _args5[0] !== undefined ? _args5[0] : 100;
+    function () {
+      var _ref6 = _asyncToGenerator(
+      /*#__PURE__*/
+      _regeneratorRuntime.mark(function _callee5() {
+        var limit,
+            oldestMessage,
+            oldestID,
+            perPage,
+            queryResponse,
+            hasMore,
+            _args5 = arguments;
+        return _regeneratorRuntime.wrap(function _callee5$(_context5) {
+          while (1) {
+            switch (_context5.prev = _context5.next) {
+              case 0:
+                limit = _args5.length > 0 && _args5[0] !== undefined ? _args5[0] : 100;
 
-              if (!_this2.state.loadingMore) {
-                _context5.next = 3;
-                break;
-              }
-
-              return _context5.abrupt("return");
-
-            case 3:
-              _this2.setState({
-                loadingMore: true
-              });
-
-              oldestID = _this2.state.messages[0] ? _this2.state.messages[0].id : null;
-              perPage = limit;
-              _context5.prev = 6;
-              _context5.next = 9;
-              return _this2.props.channel.query({
-                messages: {
-                  limit: perPage,
-                  id_lt: oldestID
+                if (!_this2.state.loadingMore) {
+                  _context5.next = 3;
+                  break;
                 }
-              });
 
-            case 9:
-              queryResponse = _context5.sent;
-              _context5.next = 17;
-              break;
+                return _context5.abrupt("return");
 
-            case 12:
-              _context5.prev = 12;
-              _context5.t0 = _context5["catch"](6);
-              console.warn('message pagination request failed with error', _context5.t0);
+              case 3:
+                _this2.setState({
+                  loadingMore: true
+                });
 
-              _this2.setState({
-                loadingMore: false
-              });
+                oldestMessage = _this2.state.messages[0];
 
-              return _context5.abrupt("return");
+                if (!(oldestMessage && oldestMessage.status !== 'received')) {
+                  _context5.next = 8;
+                  break;
+                }
 
-            case 17:
-              hasMore = queryResponse.messages.length === perPage;
+                _this2.setState({
+                  loadingMore: false
+                });
 
-              _this2._loadMoreFinishedDebounced(hasMore, _this2.props.channel.state.messages);
+                return _context5.abrupt("return");
 
-            case 19:
-            case "end":
-              return _context5.stop();
+              case 8:
+                oldestID = oldestMessage ? oldestMessage.id : null;
+                perPage = limit;
+                _context5.prev = 10;
+                _context5.next = 13;
+                return _this2.props.channel.query({
+                  messages: {
+                    limit: perPage,
+                    id_lt: oldestID
+                  }
+                });
+
+              case 13:
+                queryResponse = _context5.sent;
+                _context5.next = 21;
+                break;
+
+              case 16:
+                _context5.prev = 16;
+                _context5.t0 = _context5["catch"](10);
+                console.warn('message pagination request failed with error', _context5.t0);
+
+                _this2.setState({
+                  loadingMore: false
+                });
+
+                return _context5.abrupt("return");
+
+              case 21:
+                hasMore = queryResponse.messages.length === perPage;
+
+                _this2._loadMoreFinishedDebounced(hasMore, _this2.props.channel.state.messages);
+
+              case 23:
+              case "end":
+                return _context5.stop();
+            }
           }
-        }
-      }, _callee5, null, [[6, 12]]);
-    })));
+        }, _callee5, null, [[10, 16]]);
+      }));
+
+      return function () {
+        return _ref6.apply(this, arguments);
+      };
+    }());
 
     _defineProperty(_assertThisInitialized(_this2), "_onMentionsHoverOrClick", function (e, mentioned_users) {
       if (!_this2.props.onMentionsHover && !_this2.props.onMentionsClick) return;
@@ -8034,6 +6285,7 @@ function (_PureComponent2) {
         updateMessage: _this2.updateMessage,
         removeMessage: _this2.removeMessage,
         sendMessage: _this2.sendMessage,
+        editMessage: _this2.editMessage,
         retrySendMessage: _this2.retrySendMessage,
         loadMore: _this2.loadMore,
         // thread related
@@ -8051,7 +6303,7 @@ function (_PureComponent2) {
 
     _this2.state = {
       error: false,
-      // Loading the intial content of the channel
+      // Loading the initial content of the channel
       loading: true,
       // Loading more messages
       loadingMore: false,
@@ -8173,7 +6425,7 @@ function (_PureComponent2) {
 
       this._loadMoreThreadFinishedDebounced.cancel();
 
-      if (this.visibilityListener) {
+      if (this.visibilityListener || this.visibilityListener === 0) {
         Visibility.unbind(this.visibilityListener);
       }
     }
@@ -8188,9 +6440,9 @@ function (_PureComponent2) {
         members: channel.state.members,
         watcher_count: channel.state.watcher_count,
         loading: false,
-        typing: {}
+        typing: Immutable({})
       });
-      channel.markRead();
+      if (channel.countUnread() > 0) channel.markRead();
     }
   }, {
     key: "removeEphemeralMessages",
@@ -8222,15 +6474,15 @@ function (_PureComponent2) {
     key: "render",
     value: function render() {
       var core;
-      var LoadingIndicator$$1 = this.props.LoadingIndicator;
-      var LoadingErrorIndicator$$1 = this.props.LoadingErrorIndicator;
+      var LoadingIndicator = this.props.LoadingIndicator;
+      var LoadingErrorIndicator = this.props.LoadingErrorIndicator;
 
       if (this.state.error) {
-        core = React__default.createElement(LoadingErrorIndicator$$1, {
+        core = React__default.createElement(LoadingErrorIndicator, {
           error: this.state.error
         });
       } else if (this.state.loading) {
-        core = React__default.createElement(LoadingIndicator$$1, {
+        core = React__default.createElement(LoadingIndicator, {
           size: 25,
           isLoading: true
         });
@@ -8346,448 +6598,6 @@ _defineProperty(exports.ChannelHeader, "propTypes", {
 exports.ChannelHeader = withChannelContext(exports.ChannelHeader);
 
 /**
- * MessageInputFlat - Large Message Input to be used for the MessageInput.
- * @example ./docs/MessageInputFlat.md
- */
-
-var MessageInputFlat =
-/*#__PURE__*/
-function (_PureComponent) {
-  _inherits(MessageInputFlat, _PureComponent);
-
-  function MessageInputFlat() {
-    var _getPrototypeOf2;
-
-    var _this;
-
-    _classCallCheck(this, MessageInputFlat);
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(MessageInputFlat)).call.apply(_getPrototypeOf2, [this].concat(args)));
-
-    _defineProperty(_assertThisInitialized(_this), "renderUploads", function () {
-      return React__default.createElement(React__default.Fragment, null, _this.props.imageOrder.length > 0 && React__default.createElement(reactFileUtils.ImagePreviewer, {
-        imageUploads: _this.props.imageOrder.map(function (id) {
-          return _this.props.imageUploads[id];
-        }),
-        handleRemove: _this.props.removeImage,
-        handleRetry: _this.props.uploadImage,
-        handleFiles: _this.props.uploadNewFiles,
-        multiple: _this.props.multipleUploads,
-        disabled: _this.props.numberOfUploads >= _this.props.maxNumberOfFiles ? true : false
-      }), _this.props.fileOrder.length > 0 && React__default.createElement("div", {
-        className: "str-chat__file-uploads"
-      }, React__default.createElement(reactFileUtils.FilePreviewer, {
-        uploads: _this.props.fileOrder.map(function (id) {
-          return _this.props.fileUploads[id];
-        }),
-        handleRemove: _this.props.removeFile,
-        handleRetry: _this.props.uploadFile,
-        handleFiles: _this.props.uploadNewFiles
-      })));
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "renderEmojiPicker", function () {
-      if (_this.props.emojiPickerIsOpen) {
-        return React__default.createElement("div", {
-          className: "str-chat__input-flat--emojipicker",
-          ref: _this.props.emojiPickerRef
-        }, React__default.createElement(emojiMart.Picker, {
-          native: true,
-          emoji: "point_up",
-          title: "Pick your emoji\u2026",
-          onSelect: _this.props.onSelectEmoji,
-          color: "#006CFF",
-          showPreview: false
-        }));
-      }
-    });
-
-    return _this;
-  }
-
-  _createClass(MessageInputFlat, [{
-    key: "render",
-    value: function render() {
-      var _this2 = this;
-
-      return React__default.createElement("div", {
-        className: "str-chat__input-flat",
-        style: {
-          position: 'relative',
-          zIndex: 100,
-          width: '100%'
-        }
-      }, React__default.createElement(reactFileUtils.ImageDropzone, {
-        accept: this.props.acceptedFiles,
-        multiple: this.props.multipleUploads,
-        disabled: this.props.numberOfUploads >= this.props.maxNumberOfFiles ? true : false,
-        handleFiles: this.props.uploadNewFiles
-      }, React__default.createElement("div", {
-        className: "str-chat__input-flat-wrapper"
-      }, this.renderUploads(), this.renderEmojiPicker(), React__default.createElement(ChatAutoComplete, {
-        users: this.props.getUsers(),
-        commands: this.props.getCommands(),
-        innerRef: this.props.textareaRef,
-        handleSubmit: function handleSubmit(e) {
-          return _this2.props.handleSubmit(e);
-        },
-        onSelectItem: this.props.onSelectItem,
-        onChange: this.props.handleChange,
-        value: this.props.text,
-        rows: 1,
-        placeholder: "Type your message",
-        onPaste: this.props.onPaste,
-        grow: this.props.grow,
-        onFocus: this.props.onFocus,
-        disabled: this.props.disabled
-      }), React__default.createElement("span", {
-        className: "str-chat__input-flat-emojiselect",
-        onClick: this.props.openEmojiPicker
-      }, React__default.createElement("svg", {
-        width: "28",
-        height: "28",
-        xmlns: "http://www.w3.org/2000/svg"
-      }, React__default.createElement("path", {
-        d: "M22.217 16.1c.483.25.674.849.423 1.334C21.163 20.294 17.771 22 14 22c-3.867 0-7.347-1.765-8.66-4.605a.994.994 0 0 1 .9-1.407c.385 0 .739.225.9.575C8.135 18.715 10.892 20 14 20c3.038 0 5.738-1.267 6.879-3.476a.99.99 0 0 1 1.338-.424zm1.583-3.652c.341.443.235 1.064-.237 1.384a1.082 1.082 0 0 1-.62.168c-.338 0-.659-.132-.858-.389-.212-.276-.476-.611-1.076-.611-.598 0-.864.337-1.08.614-.197.254-.517.386-.854.386-.224 0-.438-.045-.62-.167-.517-.349-.578-.947-.235-1.388.66-.847 1.483-1.445 2.789-1.445 1.305 0 2.136.6 2.79 1.448zm-14 0c.341.443.235 1.064-.237 1.384a1.082 1.082 0 0 1-.62.168c-.339 0-.659-.132-.858-.389C7.873 13.335 7.61 13 7.01 13c-.598 0-.864.337-1.08.614-.197.254-.517.386-.854.386-.224 0-.438-.045-.62-.167-.518-.349-.579-.947-.235-1.388C4.88 11.598 5.703 11 7.01 11c1.305 0 2.136.6 2.79 1.448zM14 0c7.732 0 14 6.268 14 14s-6.268 14-14 14S0 21.732 0 14 6.268 0 14 0zm8.485 22.485A11.922 11.922 0 0 0 26 14c0-3.205-1.248-6.219-3.515-8.485A11.922 11.922 0 0 0 14 2a11.922 11.922 0 0 0-8.485 3.515A11.922 11.922 0 0 0 2 14c0 3.205 1.248 6.219 3.515 8.485A11.922 11.922 0 0 0 14 26c3.205 0 6.219-1.248 8.485-3.515z",
-        fillRule: "evenodd"
-      }))), React__default.createElement(reactFileUtils.FileUploadButton, {
-        multiple: this.props.multipleUploads,
-        disabled: this.props.numberOfUploads >= this.props.maxNumberOfFiles ? true : false,
-        accepts: this.props.acceptedFiles,
-        handleFiles: this.props.uploadNewFiles
-      }, React__default.createElement("span", {
-        className: "str-chat__input-flat-fileupload"
-      }, React__default.createElement("svg", {
-        width: "14",
-        height: "14",
-        xmlns: "http://www.w3.org/2000/svg"
-      }, React__default.createElement("path", {
-        d: "M1.667.333h10.666c.737 0 1.334.597 1.334 1.334v10.666c0 .737-.597 1.334-1.334 1.334H1.667a1.333 1.333 0 0 1-1.334-1.334V1.667C.333.93.93.333 1.667.333zm2 1.334a1.667 1.667 0 1 0 0 3.333 1.667 1.667 0 0 0 0-3.333zm-2 9.333v1.333h10.666v-4l-2-2-4 4-2-2L1.667 11z",
-        fillRule: "nonzero"
-      })))))));
-    }
-  }]);
-
-  return MessageInputFlat;
-}(React.PureComponent);
-
-_defineProperty(MessageInputFlat, "propTypes", {
-  /** Set focus to the text input if this is enabled */
-  focus: PropTypes.bool,
-
-  /** Grow the textarea while you're typing */
-  grow: PropTypes.bool,
-
-  /** Disable the textarea */
-  disabled: PropTypes.bool,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  imageOrder: PropTypes.array,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  imageUploads: PropTypes.object,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  removeImage: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  uploadImage: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  uploadNewFiles: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  numberOfUploads: PropTypes.number,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  fileOrder: PropTypes.array,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  fileUploads: PropTypes.object,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  removeFile: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  uploadFile: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  emojiPickerIsOpen: PropTypes.bool,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  emojiPickerRef: PropTypes.object,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  onSelectEmoji: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  getUsers: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  getCommands: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  textareaRef: PropTypes.object,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  handleSubmit: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  handleChange: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  onSelectItem: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  text: PropTypes.string,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  onPaste: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  openEmojiPicker: PropTypes.func,
-
-  /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
-  watcher_count: PropTypes.number,
-
-  /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
-  typing: PropTypes.object,
-
-  /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
-  multipleUploads: PropTypes.object,
-
-  /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
-  maxNumberOfFiles: PropTypes.object,
-
-  /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
-  acceptedFiles: PropTypes.object
-});
-
-_defineProperty(MessageInputFlat, "defaultProps", {
-  grow: true,
-  disabled: false
-});
-
-/**
- * MessageInputSmall - compact design to be used for the MessageInput. It has all the features of MessageInput minus the typing indicator.
- * @example ./docs/MessageInputSmall.md
- */
-
-var MessageInputSmall =
-/*#__PURE__*/
-function (_PureComponent) {
-  _inherits(MessageInputSmall, _PureComponent);
-
-  function MessageInputSmall() {
-    var _getPrototypeOf2;
-
-    var _this;
-
-    _classCallCheck(this, MessageInputSmall);
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(MessageInputSmall)).call.apply(_getPrototypeOf2, [this].concat(args)));
-
-    _defineProperty(_assertThisInitialized(_this), "renderUploads", function () {
-      return React__default.createElement(React__default.Fragment, null, _this.props.imageOrder.length > 0 && React__default.createElement(reactFileUtils.ImagePreviewer, {
-        imageUploads: _this.props.imageOrder.map(function (id) {
-          return _this.props.imageUploads[id];
-        }),
-        handleRemove: _this.props.removeImage,
-        handleRetry: _this.props.uploadImage,
-        handleFiles: _this.props.uploadNewFiles,
-        multiple: _this.props.multipleUploads,
-        disabled: _this.props.numberOfUploads >= _this.props.maxNumberOfFiles ? true : false
-      }), _this.props.fileOrder.length > 0 && React__default.createElement(reactFileUtils.FilePreviewer, {
-        uploads: _this.props.fileOrder.map(function (id) {
-          return _this.props.fileUploads[id];
-        }),
-        handleRemove: _this.props.removeFile,
-        handleRetry: _this.props.uploadFile,
-        handleFiles: _this.props.uploadNewFiles
-      }));
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "renderEmojiPicker", function () {
-      if (_this.props.emojiPickerIsOpen) {
-        return React__default.createElement("div", {
-          className: "str-chat__small-message-input-emojipicker",
-          ref: _this.props.emojiPickerRef
-        }, React__default.createElement(emojiMart.Picker, {
-          native: true,
-          emoji: "point_up",
-          title: "Pick your emoji\u2026",
-          onSelect: _this.props.onSelectEmoji,
-          color: "#006CFF",
-          showPreview: false
-        }));
-      }
-    });
-
-    return _this;
-  }
-
-  _createClass(MessageInputSmall, [{
-    key: "render",
-    value: function render() {
-      return React__default.createElement("div", {
-        style: {
-          position: 'relative',
-          zIndex: 0,
-          width: '100%'
-        }
-      }, React__default.createElement(reactFileUtils.ImageDropzone, {
-        accept: this.props.acceptedFiles,
-        multiple: this.props.multipleUploads,
-        disabled: this.props.numberOfUploads >= this.props.maxNumberOfFiles ? true : false,
-        handleFiles: this.props.uploadNewFiles
-      }, React__default.createElement("div", {
-        className: "str-chat__small-message-input"
-      }, this.renderUploads(), this.renderEmojiPicker(), React__default.createElement(ChatAutoComplete, {
-        users: this.props.getUsers(),
-        commands: this.props.getCommands(),
-        innerRef: this.props.textareaRef,
-        handleSubmit: this.props.handleSubmit,
-        onChange: this.props.handleChange,
-        value: this.props.text,
-        rows: 1,
-        onSelectItem: this.props.onSelectItem,
-        placeholder: "Type your message",
-        onPaste: this.props.onPaste,
-        grow: this.props.grow,
-        disabled: this.props.disabled
-      }), React__default.createElement("span", {
-        className: "str-chat__small-message-input-emojiselect",
-        onClick: this.props.openEmojiPicker
-      }, React__default.createElement("svg", {
-        width: "14",
-        height: "14",
-        xmlns: "http://www.w3.org/2000/svg"
-      }, React__default.createElement("path", {
-        d: "M11.108 8.05a.496.496 0 0 1 .212.667C10.581 10.147 8.886 11 7 11c-1.933 0-3.673-.882-4.33-2.302a.497.497 0 0 1 .9-.417C4.068 9.357 5.446 10 7 10c1.519 0 2.869-.633 3.44-1.738a.495.495 0 0 1 .668-.212zm.792-1.826a.477.477 0 0 1-.119.692.541.541 0 0 1-.31.084.534.534 0 0 1-.428-.194c-.106-.138-.238-.306-.539-.306-.298 0-.431.168-.54.307A.534.534 0 0 1 9.538 7a.544.544 0 0 1-.31-.084.463.463 0 0 1-.117-.694c.33-.423.742-.722 1.394-.722.653 0 1.068.3 1.396.724zm-7 0a.477.477 0 0 1-.119.692.541.541 0 0 1-.31.084.534.534 0 0 1-.428-.194c-.106-.138-.238-.306-.539-.306-.299 0-.432.168-.54.307A.533.533 0 0 1 2.538 7a.544.544 0 0 1-.31-.084.463.463 0 0 1-.117-.694c.33-.423.742-.722 1.394-.722.653 0 1.068.3 1.396.724zM7 0a7 7 0 1 1 0 14A7 7 0 0 1 7 0zm4.243 11.243A5.96 5.96 0 0 0 13 7a5.96 5.96 0 0 0-1.757-4.243A5.96 5.96 0 0 0 7 1a5.96 5.96 0 0 0-4.243 1.757A5.96 5.96 0 0 0 1 7a5.96 5.96 0 0 0 1.757 4.243A5.96 5.96 0 0 0 7 13a5.96 5.96 0 0 0 4.243-1.757z",
-        fillRule: "evenodd"
-      }))), React__default.createElement(reactFileUtils.FileUploadButton, {
-        multiple: this.props.multipleUploads,
-        disabled: this.props.numberOfUploads >= this.props.maxNumberOfFiles ? true : false,
-        accepts: this.props.acceptedFiles,
-        handleFiles: this.props.uploadNewFiles
-      }, React__default.createElement("span", {
-        className: "str-chat__small-message-input-fileupload",
-        onClick: this.props.openFilePanel
-      }, React__default.createElement("svg", {
-        width: "14",
-        height: "14",
-        xmlns: "http://www.w3.org/2000/svg"
-      }, React__default.createElement("path", {
-        d: "M7 .5c3.59 0 6.5 2.91 6.5 6.5s-2.91 6.5-6.5 6.5S.5 10.59.5 7 3.41.5 7 .5zm0 12c3.031 0 5.5-2.469 5.5-5.5S10.031 1.5 7 1.5A5.506 5.506 0 0 0 1.5 7c0 3.034 2.469 5.5 5.5 5.5zM7.506 3v3.494H11v1.05H7.506V11h-1.05V7.544H3v-1.05h3.456V3h1.05z",
-        fillRule: "nonzero"
-      })))))));
-    }
-  }]);
-
-  return MessageInputSmall;
-}(React.PureComponent);
-
-_defineProperty(MessageInputSmall, "propTypes", {
-  /** Set focus to the text input if this is enabled */
-  focus: PropTypes.bool.isRequired,
-
-  /** Grow the textarea while you're typing */
-  grow: PropTypes.bool.isRequired,
-
-  /** Make the textarea disabled */
-  disabled: PropTypes.bool,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  imageOrder: PropTypes.array,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  imageUploads: PropTypes.object,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  removeImage: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  uploadImage: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  uploadNewFiles: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  numberOfUploads: PropTypes.number,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  fileOrder: PropTypes.array,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  fileUploads: PropTypes.object,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  removeFile: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  uploadFile: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  emojiPickerIsOpen: PropTypes.bool,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  emojiPickerRef: PropTypes.object,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  onSelectEmoji: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  getUsers: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  getCommands: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  textareaRef: PropTypes.object,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  handleSubmit: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  handleChange: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  onSelectItem: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  text: PropTypes.string,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  onPaste: PropTypes.func,
-
-  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
-  openEmojiPicker: PropTypes.func,
-
-  /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
-  watcher_count: PropTypes.number,
-
-  /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
-  typing: PropTypes.object,
-
-  /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
-  multipleUploads: PropTypes.object,
-
-  /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
-  maxNumberOfFiles: PropTypes.object,
-
-  /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
-  acceptedFiles: PropTypes.object
-});
-
-/**
  * Used as preview component for channel item in [ChannelList](#channellist) component.
  *
  * @example ./docs/ChannelPreviewLastMessage.md
@@ -8815,7 +6625,7 @@ function (_PureComponent) {
     _defineProperty(_assertThisInitialized(_this), "channelPreviewButton", React__default.createRef());
 
     _defineProperty(_assertThisInitialized(_this), "onSelectChannel", function () {
-      _this.props.setActiveChannel(_this.props.channel);
+      _this.props.setActiveChannel(_this.props.channel, _this.props.watchers);
 
       _this.channelPreviewButton.current.blur();
     });
@@ -8826,7 +6636,7 @@ function (_PureComponent) {
   _createClass(ChannelPreviewLastMessage, [{
     key: "render",
     value: function render() {
-      var unreadClass = this.props.unread_count >= 1 ? 'str-chat__channel-preview--unread' : '';
+      var unreadClass = this.props.unread >= 1 ? 'str-chat__channel-preview--unread' : '';
       var activeClass = this.props.active ? 'str-chat__channel-preview--active' : '';
       var name = this.props.channel.data.name || this.props.channel.cid;
       return React__default.createElement("div", {
@@ -8834,7 +6644,7 @@ function (_PureComponent) {
       }, React__default.createElement("button", {
         onClick: this.onSelectChannel,
         ref: this.channelPreviewButton
-      }, this.props.unread_count >= 1 && React__default.createElement("div", {
+      }, this.props.unread >= 1 && React__default.createElement("div", {
         className: "str-chat__channel-preview--dot"
       }), React__default.createElement(Avatar, {
         image: this.props.channel.data.image
@@ -8844,9 +6654,11 @@ function (_PureComponent) {
         className: "str-chat__channel-preview-title"
       }, name), React__default.createElement("span", {
         className: "str-chat__channel-preview-last-message"
-      }, !this.props.channel.state.messages[0] ? 'Nothing yet...' : this.props.latestMessage), this.props.unread_count >= 1 && React__default.createElement("span", {
+      }, !this.props.channel.state.messages[0] ? 'Nothing yet...' : truncate(this.props.latestMessage, {
+        length: this.props.latestMessageLength
+      })), this.props.unread >= 1 && React__default.createElement("span", {
         className: "str-chat__channel-preview-unread-count"
-      }, this.props.unread_count))));
+      }, this.props.unread))));
     }
   }]);
 
@@ -8855,16 +6667,35 @@ function (_PureComponent) {
 
 _defineProperty(ChannelPreviewLastMessage, "propTypes", {
   /** **Available from [chat context](https://getstream.github.io/stream-chat-react/#chat)** */
-  setActiveChannel: PropTypes.func,
+  channel: PropTypes.object.isRequired,
 
-  /** **Available from [chat context](https://getstream.github.io/stream-chat-react/#chat)** */
-  channel: PropTypes.object,
-  closeMenu: PropTypes.func,
-  unread_count: PropTypes.number,
+  /** Current selected channel object */
+  activeChannel: PropTypes.object.isRequired,
+
+  /** Setter for selected channel */
+  setActiveChannel: PropTypes.func.isRequired,
+
+  /**
+   * Object containing watcher parameters
+   * @see See [Pagination documentation](https://getstream.io/chat/docs/#channel_pagination) for a list of available fields for sort.
+   * */
+  watchers: PropTypes.object,
+
+  /** Number of unread messages */
+  unread: PropTypes.number,
 
   /** If channel of component is active (selected) channel */
   active: PropTypes.bool,
-  latestMessage: PropTypes.string
+
+  /** Latest message's text. */
+  latestMessage: PropTypes.string,
+
+  /** Length of latest message to truncate at */
+  latestMessageLength: PropTypes.number
+});
+
+_defineProperty(ChannelPreviewLastMessage, "defaultProps", {
+  latestMessageLength: 20
 });
 
 var ChannelPreviewCountOnly =
@@ -8881,13 +6712,13 @@ function (_PureComponent) {
   _createClass(ChannelPreviewCountOnly, [{
     key: "render",
     value: function render() {
-      var unreadClass = this.props.unread_count >= 1 ? 'unread' : '';
+      var unreadClass = this.props.unread >= 1 ? 'unread' : '';
       var name = this.props.channel.data.name || this.props.channel.cid;
       return React__default.createElement("div", {
         className: unreadClass
       }, React__default.createElement("button", {
         onClick: this.props.setActiveChannel.bind(this, this.props.channel)
-      }, ' ', name, " ", React__default.createElement("span", null, this.props.unread_count)));
+      }, ' ', name, " ", React__default.createElement("span", null, this.props.unread)));
     }
   }]);
 
@@ -8895,17 +6726,28 @@ function (_PureComponent) {
 }(React.PureComponent);
 
 _defineProperty(ChannelPreviewCountOnly, "propTypes", {
-  /** @see See [chat context](https://getstream.github.io/stream-chat-react/#chat) for doc */
-  setActiveChannel: PropTypes.func,
+  /** **Available from [chat context](https://getstream.github.io/stream-chat-react/#chat)** */
+  channel: PropTypes.object.isRequired,
+
+  /** Current selected channel object */
+  activeChannel: PropTypes.object.isRequired,
 
   /** @see See [chat context](https://getstream.github.io/stream-chat-react/#chat) for doc */
-  channel: PropTypes.object,
-  unread_count: PropTypes.number
+  setActiveChannel: PropTypes.func.isRequired,
+
+  /**
+   * Object containing watcher parameters
+   * @see See [Pagination documentation](https://getstream.io/chat/docs/#channel_pagination) for a list of available fields for sort.
+   * */
+  watchers: PropTypes.object,
+
+  /** Number of unread messages */
+  unread: PropTypes.number
 });
 
-function ownKeys$5(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { keys.push.apply(keys, Object.getOwnPropertySymbols(object)); } if (enumerableOnly) keys = keys.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); return keys; }
+function ownKeys$5(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread$5(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$5(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$5(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread$5(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$5(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$5(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 var ChannelPreview =
 /*#__PURE__*/
 function (_PureComponent) {
@@ -8950,7 +6792,7 @@ function (_PureComponent) {
       }
 
       if (latestMessage.text) {
-        return latestMessage.text.slice(0, 20);
+        return latestMessage.text;
       } else {
         if (latestMessage.command) {
           return '/' + latestMessage.command;
@@ -9020,15 +6862,61 @@ function (_PureComponent) {
 }(React.PureComponent);
 
 _defineProperty(ChannelPreview, "propTypes", {
+  /** **Available from [chat context](https://getstream.github.io/stream-chat-react/#chat)** */
   channel: PropTypes.object.isRequired,
+
+  /** Current selected channel object */
   activeChannel: PropTypes.object.isRequired,
+
+  /** Setter for selected channel */
   setActiveChannel: PropTypes.func.isRequired,
-  Preview: PropTypes.oneOfType([PropTypes.node, PropTypes.func])
+
+  /**
+   * Available built-in options (also accepts the same props as):
+   *
+   * 1. [ChannelPreviewCompact](https://getstream.github.io/stream-chat-react/#ChannelPreviewCompact) (default)
+   * 2. [ChannelPreviewLastMessage](https://getstream.github.io/stream-chat-react/#ChannelPreviewLastMessage)
+   * 3. [ChannelPreviewMessanger](https://getstream.github.io/stream-chat-react/#ChannelPreviewMessanger)
+   *
+   * The Preview to use, defaults to ChannelPreviewLastMessage
+   * */
+  Preview: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
+
+  /**
+   * Object containing watcher parameters
+   * @see See [Pagination documentation](https://getstream.io/chat/docs/#channel_pagination) for a list of available fields for sort.
+   * */
+  watchers: PropTypes.object
 });
 
 _defineProperty(ChannelPreview, "defaultProps", {
   Preview: ChannelPreviewCountOnly
 });
+
+var EmptyStateIndicator = function EmptyStateIndicator(_ref) {
+  var listType = _ref.listType;
+  var Indicator;
+
+  switch (listType) {
+    case 'channel':
+      Indicator = React__default.createElement("p", null, "You have no channels currently");
+      break;
+
+    case 'message':
+      Indicator = null;
+      break;
+
+    default:
+      Indicator = React__default.createElement("p", null, "No items exist");
+      break;
+  }
+
+  return Indicator;
+};
+EmptyStateIndicator.propTypes = {
+  /** channel | message */
+  listType: PropTypes.string
+};
 
 var LoadMoreButton =
 /*#__PURE__*/
@@ -9058,7 +6946,11 @@ function (_React$PureComponent) {
 }(React__default.PureComponent);
 
 _defineProperty(LoadMoreButton, "propTypes", {
-  onClick: PropTypes.func
+  /** onClick handler load more button. Pagination logic should be executed in this handler. */
+  onClick: PropTypes.func,
+
+  /** If true, LoadingIndicator is displayed instead of button */
+  refreshing: PropTypes.bool
 });
 
 _defineProperty(LoadMoreButton, "defaultProps", {
@@ -9242,7 +7134,7 @@ function (_PureComponent) {
         }, React__default.createElement("div", {
           className: "str-chat__channel-list-team__sidebar--top"
         }, React__default.createElement(Avatar, {
-          image: "https://cdn.dribbble.com/users/610788/screenshots/5157282/spacex.png",
+          image: this.props.sidebarImage,
           size: 50
         }))), React__default.createElement("div", {
           className: "str-chat__channel-list-team__main"
@@ -9275,11 +7167,20 @@ function (_PureComponent) {
 }(React.PureComponent);
 
 _defineProperty(exports.ChannelListTeam, "propTypes", {
+  /** When true, loading indicator is shown - [LoadingChannels](https://github.com/GetStream/stream-chat-react/blob/master/src/components/LoadingChannels.js) */
   loading: PropTypes.bool,
+
+  /** When true, error indicator is shown - [ChatDown](https://github.com/GetStream/stream-chat-react/blob/master/src/components/ChatDown.js) */
   error: PropTypes.bool,
 
   /** Stream chat client object */
-  client: PropTypes.object
+  client: PropTypes.object,
+
+  /** When true, sidebar containing logo of the team is visible */
+  showSidebar: PropTypes.bool,
+
+  /** Url for sidebar logo image. */
+  sidebarImage: PropTypes.string
 });
 
 _defineProperty(exports.ChannelListTeam, "defaultProps", {
@@ -9288,9 +7189,9 @@ _defineProperty(exports.ChannelListTeam, "defaultProps", {
 
 exports.ChannelListTeam = withChatContext(exports.ChannelListTeam);
 
-function ownKeys$6(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { keys.push.apply(keys, Object.getOwnPropertySymbols(object)); } if (enumerableOnly) keys = keys.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); return keys; }
+function ownKeys$6(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread$6(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$6(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$6(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread$6(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$6(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$6(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 /**
  * ChannelList - A preview list of channels, allowing you to select the channel you want to open
  * @extends PureComponent
@@ -9314,7 +7215,7 @@ function (_PureComponent) {
     _asyncToGenerator(
     /*#__PURE__*/
     _regeneratorRuntime.mark(function _callee() {
-      var _this$props, options, filters, sort, offset, newOptions, channelPromise, channelQueryResponse;
+      var _this$props, options, filters, sort, offset, newOptions, channelPromise, channelQueryResponse, customActiveChannel;
 
       return _regeneratorRuntime.wrap(function _callee$(_context) {
         while (1) {
@@ -9336,7 +7237,7 @@ function (_PureComponent) {
               channelQueryResponse = channelPromise;
 
               if (!isPromise(channelQueryResponse)) {
-                _context.next = 13;
+                _context.next = 12;
                 break;
               }
 
@@ -9346,11 +7247,7 @@ function (_PureComponent) {
             case 11:
               channelQueryResponse = _context.sent;
 
-              if (offset === 0 && channelQueryResponse.length >= 1) {
-                _this.props.setActiveChannel(channelQueryResponse[0]);
-              }
-
-            case 13:
+            case 12:
               _this.setState(function (prevState) {
                 var channels = [].concat(_toConsumableArray(prevState.channels), _toConsumableArray(channelQueryResponse));
                 return {
@@ -9361,7 +7258,22 @@ function (_PureComponent) {
                   hasNextPage: channelQueryResponse.length >= newOptions.limit ? true : false,
                   refreshing: false
                 };
-              });
+              }); // Set a channel as active and move it to the top of the list.
+
+
+              if (_this.props.customActiveChannel) {
+                customActiveChannel = channelQueryResponse.filter(function (channel) {
+                  return channel.id === _this.props.customActiveChannel;
+                })[0];
+
+                if (customActiveChannel) {
+                  _this.props.setActiveChannel(customActiveChannel, _this.props.watchers);
+
+                  _this.moveChannelUp(customActiveChannel.cid);
+                }
+              } else if (offset === 0 && _this.state.channels.length >= 1) {
+                _this.props.setActiveChannel(_this.state.channels[0], _this.props.watchers);
+              }
 
               _context.next = 20;
               break;
@@ -9390,7 +7302,7 @@ function (_PureComponent) {
       var _ref2 = _asyncToGenerator(
       /*#__PURE__*/
       _regeneratorRuntime.mark(function _callee2(e) {
-        var newChannels, channel, _channel, channels, channelIndex;
+        var newChannels, channel, _channel, channels, channelIndex, _channels, _channelIndex;
 
         return _regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) {
@@ -9410,7 +7322,7 @@ function (_PureComponent) {
                 }
 
                 if (e.type === 'message.new') {
-                  _this.moveChannelUp(e.cid);
+                  !_this.props.lockChannelOrder && _this.moveChannelUp(e.cid);
                 } // make sure to re-render the channel list after connection is recovered
 
 
@@ -9514,11 +7426,41 @@ function (_PureComponent) {
                   if (_this.props.onChannelUpdated && typeof _this.props.onChannelUpdated === 'function') {
                     _this.props.onChannelUpdated(_assertThisInitialized(_this), e);
                   }
+                } // Channel is deleted
+
+
+                if (e.type === 'channel.deleted') {
+                  if (_this.props.onChannelDeleted && typeof _this.props.onChannelDeleted === 'function') {
+                    _this.props.onChannelDeleted(_assertThisInitialized(_this), e);
+                  } else {
+                    _channels = _this.state.channels;
+                    _channelIndex = _channels.findIndex(function (channel) {
+                      return channel.cid === e.channel.cid;
+                    }); // Remove the deleted channel from the list.s
+
+                    _channels.splice(_channelIndex, 1);
+
+                    _this.setState({
+                      channels: _toConsumableArray(_channels),
+                      channelUpdateCount: _this.state.channelUpdateCount + 1
+                    });
+                  }
+                }
+
+                if (e.type === 'channel.truncated') {
+                  _this.setState(function (prevState) {
+                    return {
+                      channels: _toConsumableArray(prevState.channels),
+                      channelUpdateCount: prevState.channelUpdateCount + 1
+                    };
+                  });
+
+                  if (_this.props.onChannelTruncated && typeof _this.props.onChannelTruncated === 'function') _this.props.onChannelTruncated(_assertThisInitialized(_this), e);
                 }
 
                 return _context2.abrupt("return", null);
 
-              case 24:
+              case 26:
               case "end":
                 return _context2.stop();
             }
@@ -9594,7 +7536,8 @@ function (_PureComponent) {
       var _this$props2 = _this.props,
           Preview = _this$props2.Preview,
           setActiveChannel = _this$props2.setActiveChannel,
-          channel = _this$props2.channel;
+          channel = _this$props2.channel,
+          watchers = _this$props2.watchers;
       if (!item) return;
       var props = {
         channel: item,
@@ -9602,6 +7545,7 @@ function (_PureComponent) {
         closeMenu: _this.closeMenu,
         Preview: Preview,
         setActiveChannel: setActiveChannel,
+        watchers: watchers,
         key: item.id,
         // To force the update of preview component upon channel update.
         channelUpdateCount: _this.state.channelUpdateCount,
@@ -9663,6 +7607,47 @@ function (_PureComponent) {
       return componentDidMount;
     }()
   }, {
+    key: "componentDidUpdate",
+    value: function () {
+      var _componentDidUpdate = _asyncToGenerator(
+      /*#__PURE__*/
+      _regeneratorRuntime.mark(function _callee5(prevProps) {
+        return _regeneratorRuntime.wrap(function _callee5$(_context5) {
+          while (1) {
+            switch (_context5.prev = _context5.next) {
+              case 0:
+                if (deepequal(prevProps.filters, this.props.filters)) {
+                  _context5.next = 5;
+                  break;
+                }
+
+                _context5.next = 3;
+                return this.setState({
+                  offset: 0,
+                  channels: Immutable([]),
+                  loadingChannels: true,
+                  refreshing: false
+                });
+
+              case 3:
+                _context5.next = 5;
+                return this.queryChannels();
+
+              case 5:
+              case "end":
+                return _context5.stop();
+            }
+          }
+        }, _callee5, this);
+      }));
+
+      function componentDidUpdate(_x4) {
+        return _componentDidUpdate.apply(this, arguments);
+      }
+
+      return componentDidUpdate;
+    }()
+  }, {
     key: "componentWillUnmount",
     value: function componentWillUnmount() {
       this.props.client.off(this.handleEvent);
@@ -9671,7 +7656,8 @@ function (_PureComponent) {
     key: "listenToChanges",
     value: function listenToChanges() {
       this.props.client.on(this.handleEvent);
-    }
+    } // eslint-disable-next-line sonarjs/cognitive-complexity
+
   }, {
     key: "render",
     value: function render() {
@@ -9701,8 +7687,11 @@ function (_PureComponent) {
         error: this.state.error,
         channels: channels,
         setActiveChannel: this.props.setActiveChannel,
-        activeChannel: this.props.channel
-      }, smartRender(Paginator, {
+        activeChannel: this.props.channel,
+        showSidebar: this.props.showSidebar
+      }, !channels.length ? React__default.createElement(EmptyStateIndicator, {
+        listType: "channel"
+      }) : smartRender(Paginator, {
         loadNextPage: this.loadNextPage,
         hasNextPage: hasNextPage,
         refreshing: refreshing,
@@ -9724,6 +7713,13 @@ function (_PureComponent) {
 }(React.PureComponent);
 
 _defineProperty(exports.ChannelList, "propTypes", {
+  /**
+   *
+   *
+   * Indicator for Empty State
+   * */
+  EmptyStateIndicator: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
+
   /**
    * Available built-in options (also accepts the same props as):
    *
@@ -9810,6 +7806,22 @@ _defineProperty(exports.ChannelList, "propTypes", {
   onChannelUpdated: PropTypes.func,
 
   /**
+   * Function to customize behaviour when channel gets truncated
+   *
+   * @param {Component} thisArg Reference to ChannelList component
+   * @param {Event} event       [Event object](https://getstream.io/chat/docs/#event_object) corresponding to `channel.truncated` event
+   * */
+  onChannelTruncated: PropTypes.func,
+
+  /**
+   * Function that overrides default behaviour when channel gets deleted. In absence of this prop, channel will be removed from the list.
+   *
+   * @param {Component} thisArg Reference to ChannelList component
+   * @param {Event} event       [Event object](https://getstream.io/chat/docs/#event_object) corresponding to `channel.deleted` event
+   * */
+  onChannelDeleted: PropTypes.func,
+
+  /**
    * Object containing query filters
    * @see See [Channel query documentation](https://getstream.io/chat/docs/#query_channels) for a list of available fields for filter.
    * */
@@ -9825,7 +7837,23 @@ _defineProperty(exports.ChannelList, "propTypes", {
    * Object containing sort parameters
    * @see See [Channel query documentation](https://getstream.io/chat/docs/#query_channels) for a list of available fields for sort.
    * */
-  sort: PropTypes.object
+  sort: PropTypes.object,
+
+  /**
+   * Object containing watcher parameters
+   * @see See [Pagination documentation](https://getstream.io/chat/docs/#channel_pagination) for a list of available fields for sort.
+   * */
+  watchers: PropTypes.object,
+
+  /**
+   * Set a Channel to be active and move it to the top of the list of channels by ID.
+   * */
+  customAciveChannel: PropTypes.string,
+
+  /**
+   * If true, channels won't be dynamically sorted by most recent message.
+   */
+  lockChannelOrder: PropTypes.bool
 });
 
 _defineProperty(exports.ChannelList, "defaultProps", {
@@ -9833,9 +7861,11 @@ _defineProperty(exports.ChannelList, "defaultProps", {
   LoadingIndicator: LoadingIndicator,
   List: exports.ChannelListTeam,
   Paginator: LoadMorePaginator,
+  EmptyStateIndicator: EmptyStateIndicator,
   filters: {},
   options: {},
-  sort: {}
+  sort: {},
+  watchers: {}
 });
 
 exports.ChannelList = withChatContext(exports.ChannelList);
@@ -9879,7 +7909,10 @@ function (_PureComponent) {
 }(React.PureComponent);
 
 _defineProperty(exports.ChannelListMessenger, "propTypes", {
+  /** When true, loading indicator is shown - [LoadingChannels](https://github.com/GetStream/stream-chat-react/blob/master/src/components/LoadingChannels.js) */
   loading: PropTypes.bool,
+
+  /** When true, error indicator is shown - [ChatDown](https://github.com/GetStream/stream-chat-react/blob/master/src/components/ChatDown.js) */
   error: PropTypes.bool
 });
 
@@ -9917,7 +7950,7 @@ function (_React$PureComponent) {
     _defineProperty(_assertThisInitialized(_this), "channelPreviewButton", React__default.createRef());
 
     _defineProperty(_assertThisInitialized(_this), "onSelectChannel", function () {
-      _this.props.setActiveChannel(_this.props.channel);
+      _this.props.setActiveChannel(_this.props.channel, _this.props.watchers);
 
       _this.channelPreviewButton.current.blur();
     });
@@ -9951,15 +7984,27 @@ function (_React$PureComponent) {
 
 _defineProperty(ChannelPreviewCompact, "propTypes", {
   /** **Available from [chat context](https://getstream.github.io/stream-chat-react/#chat)** */
-  setActiveChannel: PropTypes.func,
+  channel: PropTypes.object.isRequired,
 
-  /** **Available from [chat context](https://getstream.github.io/stream-chat-react/#chat)** */
-  channel: PropTypes.object,
-  closeMenu: PropTypes.func,
-  unread_count: PropTypes.number,
+  /** Current selected channel object */
+  activeChannel: PropTypes.object.isRequired,
+
+  /** Setter for selected channel */
+  setActiveChannel: PropTypes.func.isRequired,
+
+  /**
+   * Object containing watcher parameters
+   * @see See [Pagination documentation](https://getstream.io/chat/docs/#channel_pagination) for a list of available fields for sort.
+   * */
+  watchers: PropTypes.object,
+
+  /** Number of unread messages */
+  unread: PropTypes.number,
 
   /** If channel of component is active (selected) channel */
   active: PropTypes.bool,
+
+  /** Latest message's text. */
   latestMessage: PropTypes.string
 });
 
@@ -9992,7 +8037,7 @@ function (_PureComponent) {
     _defineProperty(_assertThisInitialized(_this), "channelPreviewButton", React__default.createRef());
 
     _defineProperty(_assertThisInitialized(_this), "onSelectChannel", function () {
-      _this.props.setActiveChannel(_this.props.channel);
+      _this.props.setActiveChannel(_this.props.channel, _this.props.watchers);
 
       _this.channelPreviewButton.current.blur();
 
@@ -10023,7 +8068,9 @@ function (_PureComponent) {
         className: "str-chat__channel-preview-messenger--name"
       }, React__default.createElement("span", null, channel.data.name)), React__default.createElement("div", {
         className: "str-chat__channel-preview-messenger--last-message"
-      }, !channel.state.messages[0] ? 'Nothing yet...' : truncate(this.props.latestMessage, 14))));
+      }, !channel.state.messages[0] ? 'Nothing yet...' : truncate(this.props.latestMessage, {
+        length: this.props.latestMessageLength
+      }))));
     }
   }]);
 
@@ -10032,16 +8079,364 @@ function (_PureComponent) {
 
 _defineProperty(ChannelPreviewMessenger, "propTypes", {
   /** **Available from [chat context](https://getstream.github.io/stream-chat-react/#chat)** */
-  setActiveChannel: PropTypes.func,
+  channel: PropTypes.object.isRequired,
 
-  /** **Available from [chat context](https://getstream.github.io/stream-chat-react/#chat)** */
-  channel: PropTypes.object,
-  closeMenu: PropTypes.func,
+  /** Current selected channel object */
+  activeChannel: PropTypes.object.isRequired,
+
+  /** Setter for selected channel */
+  setActiveChannel: PropTypes.func.isRequired,
+
+  /**
+   * Object containing watcher parameters
+   * @see See [Pagination documentation](https://getstream.io/chat/docs/#channel_pagination) for a list of available fields for sort.
+   * */
+  watchers: PropTypes.object,
+
+  /** Number of unread messages */
   unread: PropTypes.number,
 
   /** If channel of component is active (selected) channel */
   active: PropTypes.bool,
-  latestMessage: PropTypes.string
+
+  /** Latest message's text. */
+  latestMessage: PropTypes.string,
+
+  /** Length of latest message to truncate at */
+  latestMessageLength: PropTypes.number,
+  closeMenu: PropTypes.func
+});
+
+_defineProperty(ChannelPreviewMessenger, "defaultProps", {
+  latestMessageLength: 14
+});
+
+var ChannelSearch =
+/*#__PURE__*/
+function (_React$PureComponent) {
+  _inherits(ChannelSearch, _React$PureComponent);
+
+  function ChannelSearch() {
+    _classCallCheck(this, ChannelSearch);
+
+    return _possibleConstructorReturn(this, _getPrototypeOf(ChannelSearch).apply(this, arguments));
+  }
+
+  _createClass(ChannelSearch, [{
+    key: "render",
+    value: function render() {
+      return React__default.createElement("div", {
+        className: "str-chat__channel-search"
+      }, React__default.createElement("input", {
+        type: "text",
+        placeholder: "Search"
+      }), React__default.createElement("button", {
+        type: "submit"
+      }, React__default.createElement("svg", {
+        width: "18",
+        height: "17",
+        viewBox: "0 0 18 17",
+        xmlns: "http://www.w3.org/2000/svg"
+      }, React__default.createElement("path", {
+        d: "M0 17.015l17.333-8.508L0 0v6.617l12.417 1.89L0 10.397z",
+        fillRule: "evenodd"
+      }))));
+    }
+  }]);
+
+  return ChannelSearch;
+}(React__default.PureComponent);
+
+/**
+ * Chat - Wrapper component for Chat. The needs to be placed around any other chat components.
+ * This Chat component provides the ChatContext to all other components.
+ *
+ * The ChatContext provides the following props:
+ *
+ * - client (the client connection)
+ * - channels (the list of channels)
+ * - setActiveChannel (a function to set the currently active channel)
+ * - channel (the currently active channel)
+ *
+ * It also exposes the withChatContext HOC which you can use to consume the ChatContext
+ *
+ * @example ./docs/Chat.md
+ * @extends PureComponent
+ */
+
+var Chat =
+/*#__PURE__*/
+function (_PureComponent) {
+  _inherits(Chat, _PureComponent);
+
+  function Chat(props) {
+    var _this;
+
+    _classCallCheck(this, Chat);
+
+    _this = _possibleConstructorReturn(this, _getPrototypeOf(Chat).call(this, props));
+
+    _defineProperty(_assertThisInitialized(_this), "setActiveChannel",
+    /*#__PURE__*/
+    function () {
+      var _ref = _asyncToGenerator(
+      /*#__PURE__*/
+      _regeneratorRuntime.mark(function _callee(channel) {
+        var watchers,
+            e,
+            _args = arguments;
+        return _regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                watchers = _args.length > 1 && _args[1] !== undefined ? _args[1] : {};
+                e = _args.length > 2 ? _args[2] : undefined;
+
+                if (e !== undefined && e.preventDefault) {
+                  e.preventDefault();
+                }
+
+                if (!Object.keys(watchers).length) {
+                  _context.next = 6;
+                  break;
+                }
+
+                _context.next = 6;
+                return channel.query({
+                  watch: true,
+                  watchers: watchers
+                });
+
+              case 6:
+                _this.setState(function () {
+                  return {
+                    channel: channel
+                  };
+                });
+
+              case 7:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee);
+      }));
+
+      return function (_x) {
+        return _ref.apply(this, arguments);
+      };
+    }());
+
+    _defineProperty(_assertThisInitialized(_this), "getContext", function () {
+      return {
+        client: _this.props.client,
+        channel: _this.state.channel,
+        setActiveChannel: _this.setActiveChannel,
+        theme: _this.props.theme
+      };
+    });
+
+    _this.state = {
+      // currently active channel
+      channel: {},
+      error: false
+    };
+    return _this;
+  }
+
+  _createClass(Chat, [{
+    key: "render",
+    value: function render() {
+      return React__default.createElement(ChatContext.Provider, {
+        value: this.getContext()
+      }, this.props.children);
+    }
+  }]);
+
+  return Chat;
+}(React.PureComponent);
+
+_defineProperty(Chat, "propTypes", {
+  /** The StreamChat client object */
+  client: PropTypes.object.isRequired,
+
+  /**
+   *
+   * Theme could be used for custom styling of the components.
+   *
+   * You can override the classes used in our components under parent theme class.
+   *
+   * e.g. If you want to build a theme where background of message is black
+   *
+   * ```
+   *  <Chat client={client} theme={demo}>
+   *    <Channel>
+   *      <MessageList />
+   *    </Channel>
+   *  </Chat>
+   * ```
+   *
+   * ```scss
+   *  .demo.str-chat {
+   *    .str-chat__message-simple {
+   *      &-text-inner {
+   *        background-color: black;
+   *      }
+   *    }
+   *  }
+   * ```
+   *
+   * Built in available themes:
+   *
+   *  - `messaging light`
+   *  - `messaging dark`
+   *  - `team light`
+   *  - `team dark`
+   *  - `commerce light`
+   *  - `commerce dark`
+   *  - `gaming light`
+   *  - `gaming dark`
+   *  - `livestream light`
+   *  - `livestream dark`
+   */
+  theme: PropTypes.string
+});
+
+_defineProperty(Chat, "defaultProps", {
+  theme: 'messaging light'
+});
+
+/**
+ * DateSeparator - A simple date separator
+ *
+ * @example ./docs/DateSeparator.md
+ * @extends PureComponent
+ */
+
+var DateSeparator =
+/*#__PURE__*/
+function (_React$PureComponent) {
+  _inherits(DateSeparator, _React$PureComponent);
+
+  function DateSeparator() {
+    _classCallCheck(this, DateSeparator);
+
+    return _possibleConstructorReturn(this, _getPrototypeOf(DateSeparator).apply(this, arguments));
+  }
+
+  _createClass(DateSeparator, [{
+    key: "render",
+    value: function render() {
+      var position = this.props.position;
+
+      if (!Date.parse(this.props.date)) {
+        return null;
+      }
+
+      return React__default.createElement("div", {
+        className: "str-chat__date-separator"
+      }, (position === 'right' || position === 'center') && React__default.createElement("hr", {
+        className: "str-chat__date-separator-line"
+      }), React__default.createElement("div", {
+        className: "str-chat__date-separator-date"
+      }, this.props.formatDate ? this.props.formatDate(this.props.date) : moment(this.props.date.toISOString()).calendar(null, {
+        lastDay: '[Yesterday]',
+        sameDay: '[Today]',
+        nextDay: '[Tomorrow]',
+        lastWeek: '[Last] dddd',
+        nextWeek: 'dddd',
+        sameElse: 'L'
+      })), (position === 'left' || position === 'center') && React__default.createElement("hr", {
+        className: "str-chat__date-separator-line"
+      }));
+    }
+  }]);
+
+  return DateSeparator;
+}(React__default.PureComponent);
+
+_defineProperty(DateSeparator, "propTypes", {
+  /** The date to format */
+  date: PropTypes.instanceOf(Date),
+
+  /** Set the position of the date in the separator */
+  position: PropTypes.oneOf(['left', 'center', 'right']),
+
+  /** Override the default formatting of the date. This is a function that has access to the original date object. Returns a string or Node  */
+  formatDate: PropTypes.func
+});
+
+_defineProperty(DateSeparator, "defaultProps", {
+  position: 'right'
+});
+
+var EventComponent =
+/*#__PURE__*/
+function (_React$PureComponent) {
+  _inherits(EventComponent, _React$PureComponent);
+
+  function EventComponent() {
+    _classCallCheck(this, EventComponent);
+
+    return _possibleConstructorReturn(this, _getPrototypeOf(EventComponent).apply(this, arguments));
+  }
+
+  _createClass(EventComponent, [{
+    key: "render",
+    value: function render() {
+      var message = this.props.message;
+
+      if (message.type === 'system') {
+        return React__default.createElement("div", {
+          className: "str-chat__message--system"
+        }, React__default.createElement("div", {
+          className: "str-chat__message--system__text"
+        }, React__default.createElement("div", {
+          className: "str-chat__message--system__line"
+        }), React__default.createElement("p", null, message.text), React__default.createElement("div", {
+          className: "str-chat__message--system__line"
+        })), React__default.createElement("div", {
+          className: "str-chat__message--system__date"
+        }, React__default.createElement("strong", null, moment(message.created_at).format('dddd'), " "), "at ", moment(message.created_at).format('hh:mm A')));
+      }
+
+      if (message.type === 'channel.event' && (message.event.type === 'member.removed' || message.event.type === 'member.added')) {
+        var sentence;
+
+        switch (message.event.type) {
+          case 'member.removed':
+            sentence = "".concat(message.event.user.name || message.event.user.id, " was removed from the chat");
+            break;
+
+          case 'member.added':
+            sentence = "".concat(message.event.user.name || message.event.user.id, " has joined the chat");
+            break;
+        }
+
+        return React__default.createElement("div", {
+          className: "str-chat__event-component__channel-event"
+        }, React__default.createElement(Avatar, {
+          image: message.event.user.image,
+          name: message.event.user.name || message.event.user.id
+        }), React__default.createElement("div", {
+          className: "str-chat__event-component__channel-event__content"
+        }, React__default.createElement("em", {
+          className: "str-chat__event-component__channel-event__sentence"
+        }, sentence), React__default.createElement("div", {
+          className: "str-chat__event-component__channel-event__date"
+        }, moment(message.created_at).format('LT'))));
+      }
+
+      return null;
+    }
+  }]);
+
+  return EventComponent;
+}(React__default.PureComponent);
+
+_defineProperty(EventComponent, "propTypes", {
+  /** Message object */
+  message: PropTypes.object
 });
 
 var InfiniteScroll =
@@ -10062,7 +8457,6 @@ function (_Component) {
   _createClass(InfiniteScroll, [{
     key: "componentDidMount",
     value: function componentDidMount() {
-      this.pageLoaded = this.props.pageStart;
       this.attachScrollListener();
     }
   }, {
@@ -10173,7 +8567,7 @@ function (_Component) {
         this.detachScrollListener(); // Call loadMore after detachScrollListener to allow for non-async loadMore functions
 
         if (typeof this.props.loadMore === 'function') {
-          this.props.loadMore(this.pageLoaded += 1);
+          this.props.loadMore();
         }
       }
     }
@@ -10210,19 +8604,14 @@ function (_Component) {
           loader = renderProps.loader,
           loadMore = renderProps.loadMore,
           pageStart = renderProps.pageStart,
-          ref = renderProps.ref,
           threshold = renderProps.threshold,
           useCapture = renderProps.useCapture,
           useWindow = renderProps.useWindow,
           isLoading = renderProps.isLoading,
-          props = _objectWithoutProperties(renderProps, ["children", "element", "hasMore", "initialLoad", "isReverse", "loader", "loadMore", "pageStart", "ref", "threshold", "useCapture", "useWindow", "isLoading"]);
+          props = _objectWithoutProperties(renderProps, ["children", "element", "hasMore", "initialLoad", "isReverse", "loader", "loadMore", "pageStart", "threshold", "useCapture", "useWindow", "isLoading"]);
 
       props.ref = function (node) {
         _this2.scrollComponent = node;
-
-        if (ref) {
-          ref(node);
-        }
       };
 
       var childrenArray = [children];
@@ -10243,7 +8632,6 @@ function (_Component) {
 }(React.Component);
 
 _defineProperty(InfiniteScroll, "propTypes", {
-  children: PropTypes.node.isRequired,
   element: PropTypes.node,
   hasMore: PropTypes.bool,
   initialLoad: PropTypes.bool,
@@ -10252,7 +8640,6 @@ _defineProperty(InfiniteScroll, "propTypes", {
   loadMore: PropTypes.func.isRequired,
   pageStart: PropTypes.number,
   isLoading: PropTypes.bool,
-  ref: PropTypes.func,
   threshold: PropTypes.number,
   useCapture: PropTypes.bool,
   useWindow: PropTypes.bool
@@ -10294,12 +8681,7 @@ function (_React$Component) {
         threshold: this.props.threshold,
         useWindow: false,
         loader: React__default.createElement("div", {
-          style: {
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 10
-          },
+          className: "str-chat__infinite-scroll-paginator",
           key: "loadingindicator"
         }, React__default.createElement(reactFileUtils.LoadingIndicator, null))
       }, this.props.children);
@@ -10332,6 +8714,779 @@ _defineProperty(InfiniteScrollPaginator, "propTypes", {
 _defineProperty(InfiniteScrollPaginator, "defaultProps", {
   LoadingIndicator: React__default.createElement(reactFileUtils.LoadingIndicator, null)
 });
+
+/**
+ * Message - A high level component which implements all the logic required for a message.
+ * The actual rendering of the message is delegated via the "Message" property
+ *
+ * @example ./docs/Message.md
+ * @extends Component
+ */
+
+var Message =
+/*#__PURE__*/
+function (_Component) {
+  _inherits(Message, _Component);
+
+  function Message(props) {
+    var _this;
+
+    _classCallCheck(this, Message);
+
+    _this = _possibleConstructorReturn(this, _getPrototypeOf(Message).call(this, props));
+
+    _defineProperty(_assertThisInitialized(_this), "isMyMessage", function (message) {
+      return _this.props.client.user.id === message.user.id;
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "isAdmin", function () {
+      return _this.props.client.user.role === 'admin' || _this.props.members && _this.props.members[_this.props.client.user.id] && _this.props.members[_this.props.client.user.id].role === 'admin';
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "isOwner", function () {
+      return _this.props.members && _this.props.members[_this.props.client.user.id] && _this.props.members[_this.props.client.user.id].role === 'owner';
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "isModerator", function () {
+      return _this.props.members && _this.props.members[_this.props.client.user.id] && _this.props.members[_this.props.client.user.id].role === 'moderator';
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "canEditMessage", function (message) {
+      return _this.isMyMessage(message) || _this.isModerator() || _this.isOwner() || _this.isAdmin();
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "canDeleteMessage", function (message) {
+      return _this.canEditMessage(message);
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "validateAndGetNotificationMessage", function (func, args) {
+      if (!func || typeof func !== 'function') return false;
+      var returnValue = func.apply(null, args);
+      if (typeof returnValue !== 'string') return false;
+      return returnValue;
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "handleFlag",
+    /*#__PURE__*/
+    function () {
+      var _ref = _asyncToGenerator(
+      /*#__PURE__*/
+      _regeneratorRuntime.mark(function _callee(event) {
+        var _this$props, getFlagMessageSuccessNotification, getFlagMessageErrorNotification, message, client, addNotification, successMessage, errorMessage;
+
+        return _regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                event.preventDefault();
+                _this$props = _this.props, getFlagMessageSuccessNotification = _this$props.getFlagMessageSuccessNotification, getFlagMessageErrorNotification = _this$props.getFlagMessageErrorNotification, message = _this$props.message, client = _this$props.client, addNotification = _this$props.addNotification;
+                _context.prev = 2;
+                _context.next = 5;
+                return client.flagMessage(message.id);
+
+              case 5:
+                successMessage = _this.validateAndGetNotificationMessage(getFlagMessageSuccessNotification, [message]);
+                addNotification(successMessage ? successMessage : 'Message has been successfully flagged', 'success');
+                _context.next = 13;
+                break;
+
+              case 9:
+                _context.prev = 9;
+                _context.t0 = _context["catch"](2);
+                errorMessage = _this.validateAndGetNotificationMessage(getFlagMessageErrorNotification, [message]);
+                addNotification(errorMessage ? errorMessage : 'Error adding flag: Either the flag already exist or there is issue with network connection ...', 'error');
+
+              case 13:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee, null, [[2, 9]]);
+      }));
+
+      return function (_x) {
+        return _ref.apply(this, arguments);
+      };
+    }());
+
+    _defineProperty(_assertThisInitialized(_this), "handleMute",
+    /*#__PURE__*/
+    function () {
+      var _ref2 = _asyncToGenerator(
+      /*#__PURE__*/
+      _regeneratorRuntime.mark(function _callee2(event) {
+        var _this$props2, getMuteUserSuccessNotification, getMuteUserErrorNotification, message, client, addNotification, successMessage, errorMessage;
+
+        return _regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                event.preventDefault();
+                _this$props2 = _this.props, getMuteUserSuccessNotification = _this$props2.getMuteUserSuccessNotification, getMuteUserErrorNotification = _this$props2.getMuteUserErrorNotification, message = _this$props2.message, client = _this$props2.client, addNotification = _this$props2.addNotification;
+                _context2.prev = 2;
+                _context2.next = 5;
+                return client.muteUser(message.user.id);
+
+              case 5:
+                successMessage = _this.validateAndGetNotificationMessage(getMuteUserSuccessNotification, [message.user]);
+                addNotification(successMessage ? successMessage : "User with id ".concat(message.user.id, " has been muted"), 'success');
+                _context2.next = 13;
+                break;
+
+              case 9:
+                _context2.prev = 9;
+                _context2.t0 = _context2["catch"](2);
+                errorMessage = _this.validateAndGetNotificationMessage(getMuteUserErrorNotification, [message.user]);
+                addNotification(errorMessage ? errorMessage : 'Error muting a user ...', 'error');
+
+              case 13:
+              case "end":
+                return _context2.stop();
+            }
+          }
+        }, _callee2, null, [[2, 9]]);
+      }));
+
+      return function (_x2) {
+        return _ref2.apply(this, arguments);
+      };
+    }());
+
+    _defineProperty(_assertThisInitialized(_this), "handleEdit", function (event) {
+      var _this$props3 = _this.props,
+          setEditingState = _this$props3.setEditingState,
+          message = _this$props3.message;
+
+      if (event !== undefined && event.preventDefault) {
+        event.preventDefault();
+      }
+
+      setEditingState(message);
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "handleDelete",
+    /*#__PURE__*/
+    function () {
+      var _ref3 = _asyncToGenerator(
+      /*#__PURE__*/
+      _regeneratorRuntime.mark(function _callee3(event) {
+        var _this$props4, message, client, updateMessage, data;
+
+        return _regeneratorRuntime.wrap(function _callee3$(_context3) {
+          while (1) {
+            switch (_context3.prev = _context3.next) {
+              case 0:
+                event.preventDefault();
+                _this$props4 = _this.props, message = _this$props4.message, client = _this$props4.client, updateMessage = _this$props4.updateMessage;
+                _context3.next = 4;
+                return client.deleteMessage(message.id);
+
+              case 4:
+                data = _context3.sent;
+                updateMessage(data.message);
+
+              case 6:
+              case "end":
+                return _context3.stop();
+            }
+          }
+        }, _callee3);
+      }));
+
+      return function (_x3) {
+        return _ref3.apply(this, arguments);
+      };
+    }());
+
+    _defineProperty(_assertThisInitialized(_this), "handleReaction",
+    /*#__PURE__*/
+    function () {
+      var _ref4 = _asyncToGenerator(
+      /*#__PURE__*/
+      _regeneratorRuntime.mark(function _callee4(reactionType, event) {
+        var userExistingReaction, currentUser, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, _reaction, originalMessage, reactionChangePromise, messageID, reaction;
+
+        return _regeneratorRuntime.wrap(function _callee4$(_context4) {
+          while (1) {
+            switch (_context4.prev = _context4.next) {
+              case 0:
+                if (event !== undefined && event.preventDefault) {
+                  event.preventDefault();
+                }
+
+                userExistingReaction = null;
+                currentUser = _this.props.client.userID;
+                _iteratorNormalCompletion = true;
+                _didIteratorError = false;
+                _iteratorError = undefined;
+                _context4.prev = 6;
+
+                for (_iterator = _this.props.message.own_reactions[Symbol.iterator](); !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                  _reaction = _step.value;
+
+                  // own user should only ever contain the current user id
+                  // just in case we check to prevent bugs with message updates from breaking reactions
+                  if (currentUser === _reaction.user.id && _reaction.type === reactionType) {
+                    userExistingReaction = _reaction;
+                  } else if (currentUser !== _reaction.user.id) {
+                    console.warn("message.own_reactions contained reactions from a different user, this indicates a bug");
+                  }
+                }
+
+                _context4.next = 14;
+                break;
+
+              case 10:
+                _context4.prev = 10;
+                _context4.t0 = _context4["catch"](6);
+                _didIteratorError = true;
+                _iteratorError = _context4.t0;
+
+              case 14:
+                _context4.prev = 14;
+                _context4.prev = 15;
+
+                if (!_iteratorNormalCompletion && _iterator.return != null) {
+                  _iterator.return();
+                }
+
+              case 17:
+                _context4.prev = 17;
+
+                if (!_didIteratorError) {
+                  _context4.next = 20;
+                  break;
+                }
+
+                throw _iteratorError;
+
+              case 20:
+                return _context4.finish(17);
+
+              case 21:
+                return _context4.finish(14);
+
+              case 22:
+                originalMessage = _this.props.message;
+
+                /*
+                - Add the reaction to the local state
+                - Make the API call in the background
+                - If it fails, revert to the old message...
+                 */
+                if (userExistingReaction) {
+                  // this.props.channel.state.removeReaction(userExistingReaction);
+                  reactionChangePromise = _this.props.channel.deleteReaction(_this.props.message.id, userExistingReaction.type);
+                } else {
+                  // add the reaction
+                  messageID = _this.props.message.id;
+                  reaction = {
+                    type: reactionType
+                  }; // this.props.channel.state.addReaction(tmpReaction, this.props.message);
+
+                  reactionChangePromise = _this.props.channel.sendReaction(messageID, reaction);
+                }
+
+                _context4.prev = 24;
+                _context4.next = 27;
+                return reactionChangePromise;
+
+              case 27:
+                _context4.next = 32;
+                break;
+
+              case 29:
+                _context4.prev = 29;
+                _context4.t1 = _context4["catch"](24);
+
+                // revert to the original message if the API call fails
+                _this.props.updateMessage(originalMessage);
+
+              case 32:
+              case "end":
+                return _context4.stop();
+            }
+          }
+        }, _callee4, null, [[6, 10, 14, 22], [15,, 17, 21], [24, 29]]);
+      }));
+
+      return function (_x4, _x5) {
+        return _ref4.apply(this, arguments);
+      };
+    }());
+
+    _defineProperty(_assertThisInitialized(_this), "handleAction",
+    /*#__PURE__*/
+    function () {
+      var _ref5 = _asyncToGenerator(
+      /*#__PURE__*/
+      _regeneratorRuntime.mark(function _callee5(name, value, event) {
+        var messageID, formData, data;
+        return _regeneratorRuntime.wrap(function _callee5$(_context5) {
+          while (1) {
+            switch (_context5.prev = _context5.next) {
+              case 0:
+                event.preventDefault();
+                messageID = _this.props.message.id;
+                formData = {};
+                formData[name] = value;
+                _context5.next = 6;
+                return _this.props.channel.sendAction(messageID, formData);
+
+              case 6:
+                data = _context5.sent;
+
+                if (data && data.message) {
+                  _this.props.updateMessage(data.message);
+                } else {
+                  _this.props.removeMessage(_this.props.message);
+                }
+
+              case 8:
+              case "end":
+                return _context5.stop();
+            }
+          }
+        }, _callee5);
+      }));
+
+      return function (_x6, _x7, _x8) {
+        return _ref5.apply(this, arguments);
+      };
+    }());
+
+    _defineProperty(_assertThisInitialized(_this), "handleRetry",
+    /*#__PURE__*/
+    function () {
+      var _ref6 = _asyncToGenerator(
+      /*#__PURE__*/
+      _regeneratorRuntime.mark(function _callee6(message) {
+        return _regeneratorRuntime.wrap(function _callee6$(_context6) {
+          while (1) {
+            switch (_context6.prev = _context6.next) {
+              case 0:
+                _context6.next = 2;
+                return _this.props.retrySendMessage(message);
+
+              case 2:
+              case "end":
+                return _context6.stop();
+            }
+          }
+        }, _callee6);
+      }));
+
+      return function (_x9) {
+        return _ref6.apply(this, arguments);
+      };
+    }());
+
+    _defineProperty(_assertThisInitialized(_this), "onMentionsClick", function (e) {
+      if (typeof _this.props.onMentionsClick !== 'function') {
+        return;
+      }
+
+      _this.props.onMentionsClick(e, _this.props.message.mentioned_users);
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "onMentionsHover", function (e) {
+      var _this$props5 = _this.props,
+          onMentionsHover = _this$props5.onMentionsHover,
+          message = _this$props5.message;
+
+      if (typeof onMentionsHover !== 'function') {
+        return;
+      }
+
+      onMentionsHover(e, message.mentioned_users);
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "getMessageActions", function () {
+      var _this$props6 = _this.props,
+          message = _this$props6.message,
+          messageActionsProps = _this$props6.messageActions;
+      var messageActionsAfterPermission = [];
+      var messageActions = [];
+
+      if (messageActionsProps && typeof messageActionsProps === 'boolean') {
+        // If value of messageActionsProps is true, then populate all the possible values
+        messageActions = Object.keys(MESSAGE_ACTIONS);
+      } else if (messageActionsProps && messageActionsProps.length > 0) {
+        messageActions = _toConsumableArray(messageActionsProps);
+      } else {
+        return [];
+      }
+
+      if (_this.canEditMessage(message) && messageActions.indexOf(MESSAGE_ACTIONS.edit) > -1) {
+        messageActionsAfterPermission.push(MESSAGE_ACTIONS.edit);
+      }
+
+      if (_this.canDeleteMessage(message) && messageActions.indexOf(MESSAGE_ACTIONS.delete) > -1) {
+        messageActionsAfterPermission.push(MESSAGE_ACTIONS.delete);
+      }
+
+      if (!_this.isMyMessage(message) && messageActions.indexOf(MESSAGE_ACTIONS.flag) > -1) {
+        messageActionsAfterPermission.push(MESSAGE_ACTIONS.flag);
+      }
+
+      if (!_this.isMyMessage(message) && messageActions.indexOf(MESSAGE_ACTIONS.mute) > -1) {
+        messageActionsAfterPermission.push(MESSAGE_ACTIONS.mute);
+      }
+
+      return messageActionsAfterPermission;
+    });
+
+    _this.state = {
+      loading: false
+    };
+    return _this;
+  }
+
+  _createClass(Message, [{
+    key: "shouldComponentUpdate",
+    value: function shouldComponentUpdate(nextProps) {
+      // since there are many messages its important to only rerender messages when needed.
+      var shouldUpdate = nextProps.message !== this.props.message;
+
+
+      if (!shouldUpdate && !deepequal(nextProps.readBy, this.props.readBy)) {
+        shouldUpdate = true;
+      } // group style often changes for the last 3 messages...
+
+
+      if (!shouldUpdate && !deepequal(nextProps.groupStyles, this.props.groupStyles)) {
+        shouldUpdate = true;
+      } // if lastreceivedId changesm, message should update.
+
+
+      if (!shouldUpdate && !deepequal(nextProps.lastReceivedId, this.props.lastReceivedId)) {
+        shouldUpdate = true;
+      } // editing is the last one which can trigger a change..
+
+
+      if (!shouldUpdate && nextProps.editing !== this.props.editing) {
+        shouldUpdate = true;
+      } // editing is the last one which can trigger a change..
+
+
+      if (!shouldUpdate && nextProps.messageListRect !== this.props.messageListRect) {
+        shouldUpdate = true;
+      }
+
+      return shouldUpdate;
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      var config = this.props.channel.getConfig();
+      var message = this.props.message;
+      var actionsEnabled = message.type === 'regular' && message.status === 'received';
+      var Component = this.props.Message;
+      return React__default.createElement(Component, _extends({}, this.props, {
+        actionsEnabled: actionsEnabled,
+        Message: this,
+        handleReaction: this.handleReaction,
+        getMessageActions: this.getMessageActions,
+        handleFlag: this.handleFlag,
+        handleMute: this.handleMute,
+        handleAction: this.handleAction,
+        handleDelete: this.handleDelete,
+        handleEdit: this.handleEdit,
+        handleRetry: this.handleRetry,
+        handleOpenThread: this.props.openThread && this.props.openThread.bind(this, message),
+        isMyMessage: this.isMyMessage,
+        channelConfig: config,
+        onMentionsClickMessage: this.onMentionsClick,
+        onMentionsHoverMessage: this.onMentionsHover
+      }));
+    }
+  }]);
+
+  return Message;
+}(React.Component);
+
+_defineProperty(Message, "propTypes", {
+  /** The message object */
+  message: PropTypes.object.isRequired,
+
+  /** The client connection object for connecting to Stream */
+  client: PropTypes.object.isRequired,
+
+  /** The current channel this message is displayed in */
+  channel: PropTypes.object.isRequired,
+
+  /** A list of users that have read this message **/
+  readBy: PropTypes.array,
+
+  /** groupStyles, a list of styles to apply to this message. ie. top, bottom, single etc */
+  groupStyles: PropTypes.array,
+
+  /** Editing, if the message is currently being edited */
+  editing: PropTypes.bool,
+
+  /**
+   * Message UI component to display a message in message list.
+   * Available from [channel context](https://getstream.github.io/stream-chat-react/#channelcontext)
+   * */
+  Message: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
+
+  /**
+   * Attachment UI component to display attachment in individual message.
+   * Available from [channel context](https://getstream.github.io/stream-chat-react/#channelcontext)
+   * */
+  Attachment: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
+
+  /** render HTML instead of markdown. Posting HTML is only allowed server-side */
+  unsafeHTML: PropTypes.bool,
+
+  /**
+   * Array of allowed actions on message. e.g. ['edit', 'delete', 'mute', 'flag']
+   * If all the actions need to be disabled, empty array or false should be provided as value of prop.
+   * */
+  messageActions: PropTypes.oneOfType([PropTypes.bool, PropTypes.array]),
+
+  /**
+   * Function that returns message/text as string to be shown as notification, when request for flagging a message is successful
+   *
+   * This function should accept following params:
+   *
+   * @param message A [message object](https://getstream.io/chat/docs/#message_format) which is flagged.
+   *
+   * */
+  getFlagMessageSuccessNotification: PropTypes.func,
+
+  /**
+   * Function that returns message/text as string to be shown as notification, when request for flagging a message runs into error
+   *
+   * This function should accept following params:
+   *
+   * @param message A [message object](https://getstream.io/chat/docs/#message_format) which is flagged.
+   *
+   * */
+  getFlagMessageErrorNotification: PropTypes.func,
+
+  /**
+   * Function that returns message/text as string to be shown as notification, when request for muting a user is successful
+   *
+   * This function should accept following params:
+   *
+   * @param user A user object which is being muted
+   *
+   * */
+  getMuteUserSuccessNotification: PropTypes.func,
+
+  /**
+   * Function that returns message/text as string to be shown as notification, when request for muting a user runs into error
+   *
+   * This function should accept following params:
+   *
+   * @param user A user object which is being muted
+   *
+   * */
+  getMuteUserErrorNotification: PropTypes.func,
+
+  /** Latest message id on current channel */
+  lastReceivedId: PropTypes.string,
+
+  /** DOMRect object for parent MessageList component */
+  messageListRect: PropTypes.object,
+
+  /** @see See [Channel Context](https://getstream.github.io/stream-chat-react/#channelcontext) */
+  members: PropTypes.object,
+
+  /**
+   * Function to add custom notification on messagelist
+   *
+   * @param text Notification text to display
+   * @param type Type of notification. 'success' | 'error'
+   * */
+  addNotification: PropTypes.func,
+
+  /** Sets the editing state */
+  setEditingState: PropTypes.func,
+
+  /** @see See [Channel Context](https://getstream.github.io/stream-chat-react/#channelcontext) */
+  updateMessage: PropTypes.func,
+
+  /** @see See [Channel Context](https://getstream.github.io/stream-chat-react/#channelcontext) */
+  removeMessage: PropTypes.func,
+
+  /** @see See [Channel Context](https://getstream.github.io/stream-chat-react/#channelcontext) */
+  retrySendMessage: PropTypes.func,
+
+  /** @see See [Channel Context](https://getstream.github.io/stream-chat-react/#channelcontext) */
+  onMentionsClick: PropTypes.func,
+
+  /** @see See [Channel Context](https://getstream.github.io/stream-chat-react/#channelcontext) */
+  onMentionsHover: PropTypes.func,
+
+  /** @see See [Channel Context](https://getstream.github.io/stream-chat-react/#channelcontext) */
+  openThread: PropTypes.func,
+
+  /** Handler to clear the edit state of message. It is defined in [MessageList](https://getstream.github.io/stream-chat-react/#messagelist) component */
+  clearEditingState: PropTypes.func,
+
+  /**
+   * Additional props for underlying MessageInput component.
+   * Available props - https://getstream.github.io/stream-chat-react/#messageinput
+   * */
+  additionalMessageInputProps: PropTypes.object
+});
+
+_defineProperty(Message, "defaultProps", {
+  Message: MessageSimple,
+  readBy: [],
+  groupStyles: [],
+  Attachment: Attachment,
+  editing: false,
+  messageActions: Object.keys(MESSAGE_ACTIONS)
+});
+
+var MessageActions =
+/*#__PURE__*/
+function (_PureComponent) {
+  _inherits(MessageActions, _PureComponent);
+
+  function MessageActions(props) {
+    var _this;
+
+    _classCallCheck(this, MessageActions);
+
+    _this = _possibleConstructorReturn(this, _getPrototypeOf(MessageActions).call(this, props));
+
+    _defineProperty(_assertThisInitialized(_this), "_openActionBox", function () {
+      _this.setState({
+        actionBox: true
+      }, function () {
+        document.addEventListener('click', _this._closeActionBox);
+      });
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "_closeActionBox", function () {
+      _this.setState({
+        actionBox: false
+      }, function () {
+        document.removeEventListener('click', _this._closeActionBox);
+      });
+    });
+
+    _this.state = {
+      actionBox: false,
+      reactionBox: false
+    };
+    _this.reactionsBox = React__default.createRef();
+    _this.actionsRef = React__default.createRef();
+    return _this;
+  }
+
+  _createClass(MessageActions, [{
+    key: "componentWillUnmount",
+    value: function componentWillUnmount() {
+      document.removeEventListener('click', this._closeActionBox);
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      var _this2 = this;
+
+      return React__default.createElement("div", {
+        ref: this.actionsRef,
+        className: "str-chat__message-actions"
+      }, React__default.createElement("div", {
+        className: "str-chat__message-actions-reactions",
+        onClick: this.props.onClickReact
+      }, React__default.createElement("svg", {
+        width: "20",
+        height: "18",
+        viewBox: "0 0 20 18",
+        xmlns: "http://www.w3.org/2000/svg"
+      }, React__default.createElement("path", {
+        d: "M16.5 4.5H15a.5.5 0 1 1 0-1h1.5V2a.5.5 0 1 1 1 0v1.5H19a.5.5 0 1 1 0 1h-1.5V6a.5.5 0 1 1-1 0V4.5zM9 13c-1.773 0-3.297-.82-4-2h8c-.703 1.18-2.227 2-4 2zm4.057-11.468a.5.5 0 1 1-.479.878A7.45 7.45 0 0 0 9 1.5C4.865 1.5 1.5 4.865 1.5 9s3.365 7.5 7.5 7.5 7.5-3.365 7.5-7.5c0-.315-.02-.628-.058-.937a.5.5 0 1 1 .992-.124c.044.35.066.704.066 1.06 0 4.688-3.813 8.501-8.5 8.501C4.313 17.5.5 13.687.5 9 .5 4.312 4.313.5 9 .5a8.45 8.45 0 0 1 4.057 1.032zM7.561 5.44a1.5 1.5 0 1 1-2.123 2.122 1.5 1.5 0 0 1 2.123-2.122zm5 0a1.5 1.5 0 1 1-2.122 2.122 1.5 1.5 0 0 1 2.122-2.122z",
+        fillRule: "evenodd"
+      }))), React__default.createElement("div", {
+        className: "str-chat__message-actions-options",
+        onClick: function onClick() {
+          return _this2._openActionBox();
+        }
+      }, React__default.createElement("svg", {
+        width: "11",
+        height: "3",
+        viewBox: "0 0 11 3",
+        xmlns: "http://www.w3.org/2000/svg"
+      }, React__default.createElement("path", {
+        d: "M1.5 3a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm4 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm4 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z",
+        fillRule: "nonzero"
+      }))), React__default.createElement(MessageActionsBox, _extends({}, this.props, {
+        open: this.state.actionBox
+      })));
+    }
+  }]);
+
+  return MessageActions;
+}(React.PureComponent);
+
+_defineProperty(MessageActions, "propTypes", {
+  onClickReact: PropTypes.func,
+
+  /** If the message actions box should be open or not */
+  open: PropTypes.bool.isRequired,
+
+  /**
+   * @deprecated
+   *
+   *  The message component, most logic is delegated to this component and MessageActionsBox uses the following functions explicitly:
+   *  `handleFlag`, `handleMute`, `handleEdit`, `handleDelete`, `canDeleteMessage`, `canEditMessage`, `isMyMessage`, `isAdmin`
+   */
+  Message: PropTypes.oneOfType([PropTypes.node, PropTypes.func, PropTypes.object]).isRequired,
+
+  /** If message belongs to current user. */
+  mine: PropTypes.bool,
+
+  /** DOMRect object for parent MessageList component */
+  messageListRect: PropTypes.object,
+
+  /**
+   * Handler for flaging a current message
+   *
+   * @param event React's MouseEventHandler event
+   * @returns void
+   * */
+  handleFlag: PropTypes.func,
+
+  /**
+   * Handler for muting a current message
+   *
+   * @param event React's MouseEventHandler event
+   * @returns void
+   * */
+  handleMute: PropTypes.func,
+
+  /**
+   * Handler for editing a current message
+   *
+   * @param event React's MouseEventHandler event
+   * @returns void
+   * */
+  handleEdit: PropTypes.func,
+
+  /**
+   * Handler for deleting a current message
+   *
+   * @param event React's MouseEventHandler event
+   * @returns void
+   * */
+  handleDelete: PropTypes.func,
+
+  /**
+   * Returns array of avalable message actions for current message.
+   * Please check [Message](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Message.js) component for default implementation.
+   */
+  getMessageActions: PropTypes.func
+});
+
+MessageActions.propTypes = {
+  Message: PropTypes.object.isRequired
+};
 
 /**
  * MessageCommerce - Render component, should be used together with the Message component
@@ -10450,7 +9605,7 @@ function (_PureComponent) {
       var _this$props = this.props,
           message = _this$props.message,
           groupStyles = _this$props.groupStyles,
-          Attachment$$1 = _this$props.Attachment,
+          Attachment = _this$props.Attachment,
           handleReaction = _this$props.handleReaction,
           handleAction = _this$props.handleAction,
           actionsEnabled = _this$props.actionsEnabled,
@@ -10458,7 +9613,7 @@ function (_PureComponent) {
           onMentionsClickMessage = _this$props.onMentionsClickMessage,
           unsafeHTML = _this$props.unsafeHTML,
           threadList = _this$props.threadList,
-          openThread = _this$props.openThread;
+          handleOpenThread = _this$props.handleOpenThread;
       var when = moment(message.created_at).format('LT');
       var messageClasses = this.isMine() ? 'str-chat__message-commerce str-chat__message-commerce--left' : 'str-chat__message-commerce str-chat__message-commerce--right';
       var hasAttachment = Boolean(message.attachments && message.attachments.length);
@@ -10491,7 +9646,7 @@ function (_PureComponent) {
         name: message.user.name || message.user.id
       }), React__default.createElement("div", {
         className: "str-chat__message-commerce-inner"
-      }, !message.text && React__default.createElement(React__default.Fragment, null, this.renderOptions(), hasReactions > 0 && !this.state.showDetailedReactions && React__default.createElement(ReactionsList, {
+      }, !message.text && React__default.createElement(React__default.Fragment, null, this.renderOptions(), hasReactions && !this.state.showDetailedReactions && React__default.createElement(ReactionsList, {
         reactions: message.latest_reactions,
         reaction_counts: message.reaction_counts,
         onClick: this._clickReactionList
@@ -10504,7 +9659,7 @@ function (_PureComponent) {
         latest_reactions: message.latest_reactions,
         ref: this.reactionSelectorRef
       })), hasAttachment && images.length <= 1 && message.attachments.map(function (attachment, index) {
-        return React__default.createElement(Attachment$$1, {
+        return React__default.createElement(Attachment, {
           key: "".concat(message.id, "-").concat(index),
           attachment: attachment,
           actionHandler: handleAction
@@ -10523,7 +9678,7 @@ function (_PureComponent) {
         dangerouslySetInnerHTML: {
           __html: message.html
         }
-      }) : renderText(message), hasReactions > 0 && !this.state.showDetailedReactions && React__default.createElement(ReactionsList, {
+      }) : renderText(message), hasReactions && !this.state.showDetailedReactions && React__default.createElement(ReactionsList, {
         reverse: true,
         reactions: message.latest_reactions,
         reaction_counts: message.reaction_counts,
@@ -10539,7 +9694,7 @@ function (_PureComponent) {
       })), message.text && this.renderOptions()), !threadList && React__default.createElement("div", {
         className: "str-chat__message-commerce-reply-button"
       }, React__default.createElement(MessageRepliesCountButton, {
-        onClick: openThread,
+        onClick: handleOpenThread,
         reply_count: message.reply_count
       })), React__default.createElement("div", {
         className: "str-chat__message-commerce-data"
@@ -10566,7 +9721,7 @@ _defineProperty(MessageCommerce, "propTypes", {
 
   /**
    *
-   * @deprecated Its not recommended to use this anymore. All the methods in this HOC are provided explicitely.
+   * @deprecated Its not recommended to use this anymore. All the methods in this HOC are provided explicitly.
    *
    * The higher order message component, most logic is delegated to this component
    * @see See [Message HOC](https://getstream.github.io/stream-chat-react/#message) for example
@@ -10587,7 +9742,7 @@ _defineProperty(MessageCommerce, "propTypes", {
   threadList: PropTypes.bool,
 
   /** Function to open thread on current messxage */
-  openThread: PropTypes.func,
+  handleOpenThread: PropTypes.func,
 
   /** Returns true if message belongs to current user */
   isMyMessage: PropTypes.func,
@@ -10639,9 +9794,1664 @@ _defineProperty(MessageCommerce, "defaultProps", {
   Attachment: Attachment
 });
 
-function ownKeys$7(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { keys.push.apply(keys, Object.getOwnPropertySymbols(object)); } if (enumerableOnly) keys = keys.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); return keys; }
+/**
+ * MessageInputFlat - Large Message Input to be used for the MessageInput.
+ * @example ./docs/MessageInputFlat.md
+ */
 
-function _objectSpread$7(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$7(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$7(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+var MessageInputFlat =
+/*#__PURE__*/
+function (_PureComponent) {
+  _inherits(MessageInputFlat, _PureComponent);
+
+  function MessageInputFlat() {
+    var _getPrototypeOf2;
+
+    var _this;
+
+    _classCallCheck(this, MessageInputFlat);
+
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(MessageInputFlat)).call.apply(_getPrototypeOf2, [this].concat(args)));
+
+    _defineProperty(_assertThisInitialized(_this), "renderUploads", function () {
+      return React__default.createElement(React__default.Fragment, null, _this.props.imageOrder.length > 0 && React__default.createElement(reactFileUtils.ImagePreviewer, {
+        imageUploads: _this.props.imageOrder.map(function (id) {
+          return _this.props.imageUploads[id];
+        }),
+        handleRemove: _this.props.removeImage,
+        handleRetry: _this.props.uploadImage,
+        handleFiles: _this.props.uploadNewFiles,
+        multiple: _this.props.multipleUploads,
+        disabled: _this.props.numberOfUploads >= _this.props.maxNumberOfFiles
+      }), _this.props.fileOrder.length > 0 && React__default.createElement("div", {
+        className: "str-chat__file-uploads"
+      }, React__default.createElement(reactFileUtils.FilePreviewer, {
+        uploads: _this.props.fileOrder.map(function (id) {
+          return _this.props.fileUploads[id];
+        }),
+        handleRemove: _this.props.removeFile,
+        handleRetry: _this.props.uploadFile,
+        handleFiles: _this.props.uploadNewFiles
+      })));
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "renderEmojiPicker", function () {
+      if (_this.props.emojiPickerIsOpen) {
+        return React__default.createElement("div", {
+          className: "str-chat__input-flat--emojipicker",
+          ref: _this.props.emojiPickerRef
+        }, React__default.createElement(emojiMart.Picker, {
+          native: true,
+          emoji: "point_up",
+          title: "Pick your emoji\u2026",
+          onSelect: _this.props.onSelectEmoji,
+          color: "#006CFF",
+          showPreview: false
+        }));
+      }
+    });
+
+    return _this;
+  }
+
+  _createClass(MessageInputFlat, [{
+    key: "render",
+    value: function render() {
+      var _this2 = this;
+
+      var SendButton = this.props.SendButton;
+      return React__default.createElement("div", {
+        className: "str-chat__input-flat ".concat(SendButton ? 'str-chat__input-flat--send-button-active' : null)
+      }, React__default.createElement(reactFileUtils.ImageDropzone, {
+        accept: this.props.acceptedFiles,
+        multiple: this.props.multipleUploads,
+        disabled: this.props.numberOfUploads >= this.props.maxNumberOfFiles,
+        handleFiles: this.props.uploadNewFiles
+      }, React__default.createElement("div", {
+        className: "str-chat__input-flat-wrapper"
+      }, this.renderUploads(), this.renderEmojiPicker(), React__default.createElement("div", {
+        className: "str-chat__input-flat--textarea-wrapper"
+      }, React__default.createElement(ChatAutoComplete, {
+        users: this.props.getUsers(),
+        commands: this.props.getCommands(),
+        innerRef: this.props.textareaRef,
+        handleSubmit: function handleSubmit(e) {
+          return _this2.props.handleSubmit(e);
+        },
+        onSelectItem: this.props.onSelectItem,
+        onChange: this.props.handleChange,
+        value: this.props.text,
+        rows: 1,
+        maxRows: this.props.maxRows,
+        placeholder: "Type your message",
+        onPaste: this.props.onPaste,
+        grow: this.props.grow,
+        onFocus: this.props.onFocus,
+        disabled: this.props.disabled
+      }), React__default.createElement("span", {
+        className: "str-chat__input-flat-emojiselect",
+        onClick: this.props.openEmojiPicker
+      }, React__default.createElement("svg", {
+        width: "28",
+        height: "28",
+        xmlns: "http://www.w3.org/2000/svg"
+      }, React__default.createElement("path", {
+        d: "M22.217 16.1c.483.25.674.849.423 1.334C21.163 20.294 17.771 22 14 22c-3.867 0-7.347-1.765-8.66-4.605a.994.994 0 0 1 .9-1.407c.385 0 .739.225.9.575C8.135 18.715 10.892 20 14 20c3.038 0 5.738-1.267 6.879-3.476a.99.99 0 0 1 1.338-.424zm1.583-3.652c.341.443.235 1.064-.237 1.384a1.082 1.082 0 0 1-.62.168c-.338 0-.659-.132-.858-.389-.212-.276-.476-.611-1.076-.611-.598 0-.864.337-1.08.614-.197.254-.517.386-.854.386-.224 0-.438-.045-.62-.167-.517-.349-.578-.947-.235-1.388.66-.847 1.483-1.445 2.789-1.445 1.305 0 2.136.6 2.79 1.448zm-14 0c.341.443.235 1.064-.237 1.384a1.082 1.082 0 0 1-.62.168c-.339 0-.659-.132-.858-.389C7.873 13.335 7.61 13 7.01 13c-.598 0-.864.337-1.08.614-.197.254-.517.386-.854.386-.224 0-.438-.045-.62-.167-.518-.349-.579-.947-.235-1.388C4.88 11.598 5.703 11 7.01 11c1.305 0 2.136.6 2.79 1.448zM14 0c7.732 0 14 6.268 14 14s-6.268 14-14 14S0 21.732 0 14 6.268 0 14 0zm8.485 22.485A11.922 11.922 0 0 0 26 14c0-3.205-1.248-6.219-3.515-8.485A11.922 11.922 0 0 0 14 2a11.922 11.922 0 0 0-8.485 3.515A11.922 11.922 0 0 0 2 14c0 3.205 1.248 6.219 3.515 8.485A11.922 11.922 0 0 0 14 26c3.205 0 6.219-1.248 8.485-3.515z",
+        fillRule: "evenodd"
+      }))), React__default.createElement(reactFileUtils.FileUploadButton, {
+        multiple: this.props.multipleUploads,
+        disabled: this.props.numberOfUploads >= this.props.maxNumberOfFiles,
+        accepts: this.props.acceptedFiles,
+        handleFiles: this.props.uploadNewFiles
+      }, React__default.createElement("span", {
+        className: "str-chat__input-flat-fileupload"
+      }, React__default.createElement("svg", {
+        width: "14",
+        height: "14",
+        xmlns: "http://www.w3.org/2000/svg"
+      }, React__default.createElement("path", {
+        d: "M1.667.333h10.666c.737 0 1.334.597 1.334 1.334v10.666c0 .737-.597 1.334-1.334 1.334H1.667a1.333 1.333 0 0 1-1.334-1.334V1.667C.333.93.93.333 1.667.333zm2 1.334a1.667 1.667 0 1 0 0 3.333 1.667 1.667 0 0 0 0-3.333zm-2 9.333v1.333h10.666v-4l-2-2-4 4-2-2L1.667 11z",
+        fillRule: "nonzero"
+      })))), SendButton && React__default.createElement(SendButton, {
+        sendMessage: this.props.handleSubmit
+      })))));
+    }
+  }]);
+
+  return MessageInputFlat;
+}(React.PureComponent);
+
+_defineProperty(MessageInputFlat, "propTypes", {
+  /** Set focus to the text input if this is enabled */
+  focus: PropTypes.bool,
+
+  /** Grow the textarea while you're typing */
+  grow: PropTypes.bool,
+
+  /** Disable the textarea */
+  disabled: PropTypes.bool,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  imageOrder: PropTypes.array,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  imageUploads: PropTypes.object,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  removeImage: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  uploadImage: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  uploadNewFiles: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  numberOfUploads: PropTypes.number,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  fileOrder: PropTypes.array,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  fileUploads: PropTypes.object,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  removeFile: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  uploadFile: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  emojiPickerIsOpen: PropTypes.bool,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  emojiPickerRef: PropTypes.object,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  onSelectEmoji: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  getUsers: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  getCommands: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  textareaRef: PropTypes.object,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  handleSubmit: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  handleChange: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  onSelectItem: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  text: PropTypes.string,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  onPaste: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  openEmojiPicker: PropTypes.func,
+
+  /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
+  watcher_count: PropTypes.number,
+
+  /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
+  typing: PropTypes.object,
+
+  /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
+  multipleUploads: PropTypes.object,
+
+  /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
+  maxNumberOfFiles: PropTypes.object,
+
+  /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
+  acceptedFiles: PropTypes.object,
+
+  /**
+   * Custom UI component for send button.
+   *
+   * Defaults to and accepts same props as: [SendButton](https://getstream.github.io/stream-chat-react/#sendbutton)
+   * */
+  SendButton: PropTypes.oneOfType([PropTypes.node, PropTypes.func])
+});
+
+_defineProperty(MessageInputFlat, "defaultProps", {
+  grow: true,
+  disabled: false
+});
+
+/**
+ * MessageInputSmall - compact design to be used for the MessageInput. It has all the features of MessageInput minus the typing indicator.
+ * @example ./docs/MessageInputSmall.md
+ */
+
+var MessageInputSmall =
+/*#__PURE__*/
+function (_PureComponent) {
+  _inherits(MessageInputSmall, _PureComponent);
+
+  function MessageInputSmall() {
+    var _getPrototypeOf2;
+
+    var _this;
+
+    _classCallCheck(this, MessageInputSmall);
+
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(MessageInputSmall)).call.apply(_getPrototypeOf2, [this].concat(args)));
+
+    _defineProperty(_assertThisInitialized(_this), "renderUploads", function () {
+      return React__default.createElement(React__default.Fragment, null, _this.props.imageOrder.length > 0 && React__default.createElement(reactFileUtils.ImagePreviewer, {
+        imageUploads: _this.props.imageOrder.map(function (id) {
+          return _this.props.imageUploads[id];
+        }),
+        handleRemove: _this.props.removeImage,
+        handleRetry: _this.props.uploadImage,
+        handleFiles: _this.props.uploadNewFiles,
+        multiple: _this.props.multipleUploads,
+        disabled: _this.props.numberOfUploads >= _this.props.maxNumberOfFiles ? true : false
+      }), _this.props.fileOrder.length > 0 && React__default.createElement(reactFileUtils.FilePreviewer, {
+        uploads: _this.props.fileOrder.map(function (id) {
+          return _this.props.fileUploads[id];
+        }),
+        handleRemove: _this.props.removeFile,
+        handleRetry: _this.props.uploadFile,
+        handleFiles: _this.props.uploadNewFiles
+      }));
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "renderEmojiPicker", function () {
+      if (_this.props.emojiPickerIsOpen) {
+        return React__default.createElement("div", {
+          className: "str-chat__small-message-input-emojipicker",
+          ref: _this.props.emojiPickerRef
+        }, React__default.createElement(emojiMart.Picker, {
+          native: true,
+          emoji: "point_up",
+          title: "Pick your emoji\u2026",
+          onSelect: _this.props.onSelectEmoji,
+          color: "#006CFF",
+          showPreview: false
+        }));
+      }
+    });
+
+    return _this;
+  }
+
+  _createClass(MessageInputSmall, [{
+    key: "render",
+    value: function render() {
+      var SendButton = this.props.SendButton;
+      return React__default.createElement("div", {
+        className: "str-chat__small-message-input__wrapper"
+      }, React__default.createElement(reactFileUtils.ImageDropzone, {
+        accept: this.props.acceptedFiles,
+        multiple: this.props.multipleUploads,
+        disabled: this.props.numberOfUploads >= this.props.maxNumberOfFiles ? true : false,
+        handleFiles: this.props.uploadNewFiles
+      }, React__default.createElement("div", {
+        className: "str-chat__small-message-input ".concat(SendButton ? 'str-chat__small-message-input--send-button-active' : null)
+      }, this.renderUploads(), this.renderEmojiPicker(), React__default.createElement("div", {
+        className: "str-chat__small-message-input--textarea-wrapper"
+      }, React__default.createElement(ChatAutoComplete, {
+        users: this.props.getUsers(),
+        commands: this.props.getCommands(),
+        innerRef: this.props.textareaRef,
+        handleSubmit: this.props.handleSubmit,
+        onChange: this.props.handleChange,
+        value: this.props.text,
+        rows: 1,
+        maxRows: this.props.maxRows,
+        onSelectItem: this.props.onSelectItem,
+        placeholder: "Type your message",
+        onPaste: this.props.onPaste,
+        grow: this.props.grow,
+        disabled: this.props.disabled
+      }), React__default.createElement("span", {
+        className: "str-chat__small-message-input-emojiselect",
+        onClick: this.props.openEmojiPicker
+      }, React__default.createElement("svg", {
+        width: "14",
+        height: "14",
+        xmlns: "http://www.w3.org/2000/svg"
+      }, React__default.createElement("path", {
+        d: "M11.108 8.05a.496.496 0 0 1 .212.667C10.581 10.147 8.886 11 7 11c-1.933 0-3.673-.882-4.33-2.302a.497.497 0 0 1 .9-.417C4.068 9.357 5.446 10 7 10c1.519 0 2.869-.633 3.44-1.738a.495.495 0 0 1 .668-.212zm.792-1.826a.477.477 0 0 1-.119.692.541.541 0 0 1-.31.084.534.534 0 0 1-.428-.194c-.106-.138-.238-.306-.539-.306-.298 0-.431.168-.54.307A.534.534 0 0 1 9.538 7a.544.544 0 0 1-.31-.084.463.463 0 0 1-.117-.694c.33-.423.742-.722 1.394-.722.653 0 1.068.3 1.396.724zm-7 0a.477.477 0 0 1-.119.692.541.541 0 0 1-.31.084.534.534 0 0 1-.428-.194c-.106-.138-.238-.306-.539-.306-.299 0-.432.168-.54.307A.533.533 0 0 1 2.538 7a.544.544 0 0 1-.31-.084.463.463 0 0 1-.117-.694c.33-.423.742-.722 1.394-.722.653 0 1.068.3 1.396.724zM7 0a7 7 0 1 1 0 14A7 7 0 0 1 7 0zm4.243 11.243A5.96 5.96 0 0 0 13 7a5.96 5.96 0 0 0-1.757-4.243A5.96 5.96 0 0 0 7 1a5.96 5.96 0 0 0-4.243 1.757A5.96 5.96 0 0 0 1 7a5.96 5.96 0 0 0 1.757 4.243A5.96 5.96 0 0 0 7 13a5.96 5.96 0 0 0 4.243-1.757z",
+        fillRule: "evenodd"
+      }))), React__default.createElement(reactFileUtils.FileUploadButton, {
+        multiple: this.props.multipleUploads,
+        disabled: this.props.numberOfUploads >= this.props.maxNumberOfFiles ? true : false,
+        accepts: this.props.acceptedFiles,
+        handleFiles: this.props.uploadNewFiles
+      }, React__default.createElement("span", {
+        className: "str-chat__small-message-input-fileupload",
+        onClick: this.props.openFilePanel
+      }, React__default.createElement("svg", {
+        width: "14",
+        height: "14",
+        xmlns: "http://www.w3.org/2000/svg"
+      }, React__default.createElement("path", {
+        d: "M7 .5c3.59 0 6.5 2.91 6.5 6.5s-2.91 6.5-6.5 6.5S.5 10.59.5 7 3.41.5 7 .5zm0 12c3.031 0 5.5-2.469 5.5-5.5S10.031 1.5 7 1.5A5.506 5.506 0 0 0 1.5 7c0 3.034 2.469 5.5 5.5 5.5zM7.506 3v3.494H11v1.05H7.506V11h-1.05V7.544H3v-1.05h3.456V3h1.05z",
+        fillRule: "nonzero"
+      })))), SendButton && React__default.createElement(SendButton, {
+        sendMessage: this.props.handleSubmit
+      })))));
+    }
+  }]);
+
+  return MessageInputSmall;
+}(React.PureComponent);
+
+_defineProperty(MessageInputSmall, "propTypes", {
+  /** Set focus to the text input if this is enabled */
+  focus: PropTypes.bool.isRequired,
+
+  /** Grow the textarea while you're typing */
+  grow: PropTypes.bool.isRequired,
+
+  /** Specify the max amount of rows the textarea is able to grow */
+  maxRows: PropTypes.number.isRequired,
+
+  /** Make the textarea disabled */
+  disabled: PropTypes.bool,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  imageOrder: PropTypes.array,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  imageUploads: PropTypes.object,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  removeImage: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  uploadImage: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  uploadNewFiles: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  numberOfUploads: PropTypes.number,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  fileOrder: PropTypes.array,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  fileUploads: PropTypes.object,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  removeFile: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  uploadFile: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  emojiPickerIsOpen: PropTypes.bool,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  emojiPickerRef: PropTypes.object,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  onSelectEmoji: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  getUsers: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  getCommands: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  textareaRef: PropTypes.object,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  handleSubmit: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  handleChange: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  onSelectItem: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  text: PropTypes.string,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  onPaste: PropTypes.func,
+
+  /** @see See [MessageInput](https://getstream.github.io/stream-chat-react/#messageinput) for doc */
+  openEmojiPicker: PropTypes.func,
+
+  /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
+  watcher_count: PropTypes.number,
+
+  /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
+  typing: PropTypes.object,
+
+  /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
+  multipleUploads: PropTypes.object,
+
+  /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
+  maxNumberOfFiles: PropTypes.object,
+
+  /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channel) doc */
+  acceptedFiles: PropTypes.object,
+
+  /**
+   * Custom UI component for send button.
+   *
+   * Defaults to and accepts same props as: [SendButton](https://getstream.github.io/stream-chat-react/#sendbutton)
+   * */
+  SendButton: PropTypes.oneOfType([PropTypes.node, PropTypes.func])
+});
+
+var ReverseInfiniteScroll =
+/*#__PURE__*/
+function (_Component) {
+  _inherits(ReverseInfiniteScroll, _Component);
+
+  function ReverseInfiniteScroll(props) {
+    var _this;
+
+    _classCallCheck(this, ReverseInfiniteScroll);
+
+    _this = _possibleConstructorReturn(this, _getPrototypeOf(ReverseInfiniteScroll).call(this, props));
+    _this.scrollListener = _this.scrollListener.bind(_assertThisInitialized(_this));
+    _this.scrollEventCount = 0;
+    return _this;
+  }
+
+  _createClass(ReverseInfiniteScroll, [{
+    key: "componentDidMount",
+    value: function componentDidMount() {
+      this.attachScrollListener();
+    }
+  }, {
+    key: "componentWillUnmount",
+    value: function componentWillUnmount() {
+      this.detachScrollListener();
+      this.detachMousewheelListener();
+    } // Set a defaut loader for all your `InfiniteScroll` components
+
+  }, {
+    key: "setDefaultLoader",
+    value: function setDefaultLoader(loader) {
+      this.defaultLoader = loader;
+    }
+  }, {
+    key: "detachMousewheelListener",
+    value: function detachMousewheelListener() {
+      var scrollEl = window;
+
+      if (this.props.useWindow === false) {
+        scrollEl = this.scrollComponent.parentNode;
+      }
+
+      scrollEl.removeEventListener('mousewheel', this.mousewheelListener, this.props.useCapture);
+    }
+  }, {
+    key: "detachScrollListener",
+    value: function detachScrollListener() {
+      var scrollEl = window;
+
+      if (this.props.useWindow === false) {
+        scrollEl = this.getParentElement(this.scrollComponent);
+      }
+
+      scrollEl.removeEventListener('scroll', this.scrollListener, this.props.useCapture);
+      scrollEl.removeEventListener('resize', this.scrollListener, this.props.useCapture);
+    }
+  }, {
+    key: "getParentElement",
+    value: function getParentElement(el) {
+      return el && el.parentNode;
+    }
+  }, {
+    key: "filterProps",
+    value: function filterProps(props) {
+      return props;
+    }
+  }, {
+    key: "attachScrollListener",
+    value: function attachScrollListener() {
+      if (!this.props.hasMore || this.props.isLoading || !this.getParentElement(this.scrollComponent)) {
+        return;
+      }
+
+      var scrollEl = window;
+
+      if (this.props.useWindow === false) {
+        scrollEl = this.getParentElement(this.scrollComponent);
+      }
+
+      scrollEl.addEventListener('mousewheel', this.mousewheelListener, this.props.useCapture);
+      scrollEl.addEventListener('scroll', this.scrollListener, this.props.useCapture);
+      scrollEl.addEventListener('resize', this.scrollListener, this.props.useCapture);
+
+      if (this.props.initialLoad) {
+        this.scrollListener();
+      }
+    }
+  }, {
+    key: "mousewheelListener",
+    value: function mousewheelListener(e) {
+      // Prevents Chrome hangups
+      // See: https://stackoverflow.com/questions/47524205/random-high-content-download-time-in-chrome/47684257#47684257
+      if (e.deltaY === 1) {
+        e.preventDefault();
+      }
+    }
+  }, {
+    key: "scrollListener",
+    value: function scrollListener() {
+      var el = this.scrollComponent;
+      var parentNode = this.getParentElement(el);
+      this.scrollEventCount += 1;
+      var offset;
+      var reverseOffset = parentNode.scrollTop;
+      var standardOffset = el.scrollHeight - parentNode.scrollTop - parentNode.clientHeight;
+
+      if (this.props.isReverse) {
+        offset = reverseOffset;
+      } else {
+        offset = standardOffset;
+      }
+
+      if (this.props.listenToScroll) {
+        this.props.listenToScroll(standardOffset, reverseOffset);
+      } // a reverse infinite scroll element always starts out at position 0
+      // this counter prevent you from loading content before the user even scrolled
+
+
+      if (this.scrollEventCount < 2) {
+        return;
+      } // prevent crazy repeat requests in case you don't have more
+
+
+      if (!this.props.hasMore || this.props.isLoading) {
+        return;
+      } // Here we make sure the element is visible as well as checking the offset
+
+
+      if (offset < Number(this.props.threshold) && el && el.offsetParent !== null) {
+        //this.detachScrollListener();
+        // Call loadMore after detachScrollListener to allow for non-async loadMore functions
+        if (typeof this.props.loadMore === 'function') {
+          this.props.loadMore();
+        }
+      }
+    }
+  }, {
+    key: "calculateOffset",
+    value: function calculateOffset(el, scrollTop) {
+      if (!el) {
+        return 0;
+      }
+
+      return this.calculateTopPosition(el) + (el.offsetHeight - scrollTop - window.innerHeight);
+    }
+  }, {
+    key: "calculateTopPosition",
+    value: function calculateTopPosition(el) {
+      if (!el) {
+        return 0;
+      }
+
+      return el.offsetTop + this.calculateTopPosition(el.offsetParent);
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      var _this2 = this;
+
+      var renderProps = this.filterProps(this.props);
+
+      var children = renderProps.children,
+          element = renderProps.element,
+          hasMore = renderProps.hasMore,
+          initialLoad = renderProps.initialLoad,
+          isReverse = renderProps.isReverse,
+          loader = renderProps.loader,
+          loadMore = renderProps.loadMore,
+          pageStart = renderProps.pageStart,
+          ref = renderProps.ref,
+          threshold = renderProps.threshold,
+          useCapture = renderProps.useCapture,
+          useWindow = renderProps.useWindow,
+          listenToScroll = renderProps.listenToScroll,
+          isLoading = renderProps.isLoading,
+          props = _objectWithoutProperties(renderProps, ["children", "element", "hasMore", "initialLoad", "isReverse", "loader", "loadMore", "pageStart", "ref", "threshold", "useCapture", "useWindow", "listenToScroll", "isLoading"]);
+
+      props.ref = function (node) {
+        _this2.scrollComponent = node;
+      };
+
+      var childrenArray = [children];
+
+      if (isLoading) {
+        if (loader) {
+          isReverse ? childrenArray.unshift(loader) : childrenArray.push(loader);
+        } else if (this.defaultLoader) {
+          isReverse ? childrenArray.unshift(this.defaultLoader) : childrenArray.push(this.defaultLoader);
+        }
+      }
+
+      return React__default.createElement(element, props, childrenArray);
+    }
+  }]);
+
+  return ReverseInfiniteScroll;
+}(React.Component);
+
+_defineProperty(ReverseInfiniteScroll, "propTypes", {
+  children: PropTypes.node.isRequired,
+  element: PropTypes.node,
+
+  /** Weather there are more elements to be loaded or not */
+  hasMore: PropTypes.bool,
+  initialLoad: PropTypes.bool,
+  isReverse: PropTypes.bool,
+  loader: PropTypes.node,
+  loadMore: PropTypes.func.isRequired,
+  pageStart: PropTypes.number,
+  threshold: PropTypes.number,
+  useCapture: PropTypes.bool,
+  useWindow: PropTypes.bool,
+  className: PropTypes.string,
+
+  /** The function is called when the list scrolls */
+  listenToScroll: PropTypes.func
+});
+
+_defineProperty(ReverseInfiniteScroll, "defaultProps", {
+  element: 'div',
+  hasMore: false,
+  initialLoad: true,
+  pageStart: 0,
+  ref: null,
+  threshold: 250,
+  useWindow: true,
+  isReverse: true,
+  useCapture: false,
+  loader: null,
+  className: 'str-chat__reverse-infinite-scroll'
+});
+
+var MessageNotification =
+/*#__PURE__*/
+function (_PureComponent) {
+  _inherits(MessageNotification, _PureComponent);
+
+  function MessageNotification() {
+    _classCallCheck(this, MessageNotification);
+
+    return _possibleConstructorReturn(this, _getPrototypeOf(MessageNotification).apply(this, arguments));
+  }
+
+  _createClass(MessageNotification, [{
+    key: "render",
+    value: function render() {
+      if (!this.props.showNotification) {
+        return null;
+      } else {
+        return React__default.createElement("button", {
+          className: "str-chat__message-notification",
+          onClick: this.props.onClick
+        }, this.props.children);
+      }
+    }
+  }]);
+
+  return MessageNotification;
+}(React.PureComponent);
+
+_defineProperty(MessageNotification, "propTypes", {
+  /** If we should show the notification or not */
+  showNotification: PropTypes.bool,
+
+  /** Onclick handler */
+  onClick: PropTypes.func.isRequired
+});
+
+_defineProperty(MessageNotification, "defaultProps", {
+  showNotification: true
+});
+
+/* eslint sonarjs/no-duplicate-string: 0 */
+
+/**
+ * MessageList - The message list components renders a list of messages. Its a consumer of [Channel Context](https://getstream.github.io/stream-chat-react/#channel)
+ *
+ * @example ./docs/MessageList.md
+ * @extends PureComponent
+ */
+
+exports.MessageList =
+/*#__PURE__*/
+function (_PureComponent) {
+  _inherits(MessageList, _PureComponent);
+
+  function MessageList(props) {
+    var _this;
+
+    _classCallCheck(this, MessageList);
+
+    _this = _possibleConstructorReturn(this, _getPrototypeOf(MessageList).call(this, props));
+
+    _defineProperty(_assertThisInitialized(_this), "connectionChanged", function (event) {
+      if (_this.state.online !== event.online) {
+        _this.setState({
+          online: event.online
+        });
+      }
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "keypress", function (event) {
+      if (event.keyCode === KEY_CODES.ESC && _this.state.editing) {
+        _this.clearEditingState();
+      }
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "scrollToBottom", function () {
+      _this._scrollToRef(_this.bottomRef, _this.messageList);
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "_scrollToRef", function (el, parent) {
+      function scrollDown() {
+        if (el && el.current && parent && parent.current) {
+          this.scrollToTarget(el.current, parent.current);
+        }
+      }
+
+      scrollDown.call(_assertThisInitialized(_this)); // scroll down after images load again
+
+      setTimeout(scrollDown.bind(_assertThisInitialized(_this)), 200);
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "scrollToTarget", function (target, containerEl) {
+      // Moved up here for readability:
+      var isElement = target && target.nodeType === 1,
+          isNumber = Object.prototype.toString.call(target) === '[object Number]';
+
+      if (isElement) {
+        containerEl.scrollTop = target.offsetTop;
+      } else if (isNumber) {
+        containerEl.scrollTop = target;
+      } else if (target === 'bottom') {
+        containerEl.scrollTop = containerEl.scrollHeight - containerEl.offsetHeight;
+      } else if (target === 'top') {
+        containerEl.scrollTop = 0;
+      }
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "setEditingState", function (message) {
+      _this.setState({
+        editing: message.id
+      });
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "clearEditingState", function (e) {
+      if (e && e.preventDefault) {
+        e.preventDefault();
+      }
+
+      _this.setState({
+        editing: ''
+      });
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "insertDates", function (messages) {
+      var newMessages = [];
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = messages.entries()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var _step$value = _slicedToArray(_step.value, 2),
+              i = _step$value[0],
+              message = _step$value[1];
+
+          if (message.type === 'message.read' || message.deleted_at) {
+            newMessages.push(message);
+            continue;
+          }
+
+          var messageDate = message.created_at.getDay();
+          var prevMessageDate = messageDate;
+
+          if (i > 0) {
+            prevMessageDate = messages[i - 1].created_at.getDay();
+          }
+
+          if (i === 0 || messageDate !== prevMessageDate) {
+            newMessages.push({
+              type: 'message.date',
+              date: message.created_at
+            }, message);
+          } else {
+            newMessages.push(message);
+          }
+
+          var eventsNextToMessage = _this.props.eventHistory[message.id || 'first'];
+
+          if (eventsNextToMessage && eventsNextToMessage.length > 0) {
+            eventsNextToMessage.forEach(function (e) {
+              newMessages.push({
+                type: 'channel.event',
+                event: e
+              });
+            });
+          }
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return != null) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+
+      return newMessages;
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "insertIntro", function (messages) {
+      var newMessages = messages || []; // if no headerPosition is set, HeaderComponent will go at the top
+
+      if (!_this.props.headerPosition) {
+        newMessages.unshift({
+          type: 'channel.intro' // created_at: new Date(0),
+
+        });
+        return newMessages;
+      } // if no messages, intro get's inserted
+
+
+      if (!newMessages.length) {
+        newMessages.unshift({
+          type: 'channel.intro'
+        });
+        return newMessages;
+      } // else loop over the messages
+
+
+      var _iteratorNormalCompletion2 = true;
+      var _didIteratorError2 = false;
+      var _iteratorError2 = undefined;
+
+      try {
+        for (var _iterator2 = messages.entries()[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+          var _step2$value = _slicedToArray(_step2.value, 2),
+              i = _step2$value[0],
+              message = _step2$value[1];
+
+          var messageTime = message.created_at ? message.created_at.getTime() : null;
+          var nextMessageTime = messages[i + 1] && messages[i + 1].created_at ? messages[i + 1].created_at.getTime() : null;
+          var headerPosition = _this.props.headerPosition; // headerposition is smaller than message time so comes after;
+
+          if (messageTime < headerPosition) {
+            // if header position is also smaller than message time continue;
+            if (nextMessageTime < headerPosition) {
+              if (messages[i + 1] && messages[i + 1].type === 'message.date') continue;
+
+              if (!nextMessageTime) {
+                newMessages.push({
+                  type: 'channel.intro'
+                });
+                return newMessages;
+              }
+
+              continue;
+            } else {
+              newMessages.splice(i + 1, 0, {
+                type: 'channel.intro'
+              });
+              return newMessages;
+            }
+          }
+        }
+      } catch (err) {
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion2 && _iterator2.return != null) {
+            _iterator2.return();
+          }
+        } finally {
+          if (_didIteratorError2) {
+            throw _iteratorError2;
+          }
+        }
+      }
+
+      return newMessages;
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "goToNewMessages",
+    /*#__PURE__*/
+    _asyncToGenerator(
+    /*#__PURE__*/
+    _regeneratorRuntime.mark(function _callee() {
+      return _regeneratorRuntime.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              _context.next = 2;
+              return _this.scrollToBottom();
+
+            case 2:
+              _this.setState({
+                newMessagesNotification: false
+              });
+
+            case 3:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee);
+    })));
+
+    _defineProperty(_assertThisInitialized(_this), "getReadStates", function (messages) {
+      // create object with empty array for each message id
+      var readData = {};
+      var _iteratorNormalCompletion3 = true;
+      var _didIteratorError3 = false;
+      var _iteratorError3 = undefined;
+
+      try {
+        for (var _iterator3 = messages[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+          var message = _step3.value;
+          readData[message.id] = [];
+        }
+      } catch (err) {
+        _didIteratorError3 = true;
+        _iteratorError3 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion3 && _iterator3.return != null) {
+            _iterator3.return();
+          }
+        } finally {
+          if (_didIteratorError3) {
+            throw _iteratorError3;
+          }
+        }
+      }
+
+      for (var _i = 0, _Object$values = Object.values(_this.props.read); _i < _Object$values.length; _i++) {
+        var readState = _Object$values[_i];
+
+        if (readState.last_read == null) {
+          break;
+        }
+
+        var userLastReadMsgId = void 0;
+        var _iteratorNormalCompletion4 = true;
+        var _didIteratorError4 = false;
+        var _iteratorError4 = undefined;
+
+        try {
+          for (var _iterator4 = messages[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+            var msg = _step4.value;
+
+            if (msg.updated_at < readState.last_read) {
+              userLastReadMsgId = msg.id;
+            }
+          }
+        } catch (err) {
+          _didIteratorError4 = true;
+          _iteratorError4 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion4 && _iterator4.return != null) {
+              _iterator4.return();
+            }
+          } finally {
+            if (_didIteratorError4) {
+              throw _iteratorError4;
+            }
+          }
+        }
+
+        if (userLastReadMsgId != null) {
+          readData[userLastReadMsgId] = [].concat(_toConsumableArray(readData[userLastReadMsgId]), [readState.user]);
+        }
+      }
+
+      return readData;
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "userScrolledUp", function () {
+      return _this.scrollOffset > 310;
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "listenToScroll", function (offset) {
+      _this.scrollOffset = offset;
+
+      if (_this.state.newMessagesNotification && !_this.userScrolledUp()) {
+        _this.setState({
+          newMessagesNotification: false
+        });
+      }
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "getLastReceived", function (messages) {
+      var l = messages.length;
+      var lastReceivedId = null;
+
+      for (var i = l; i > 0; i--) {
+        if (messages[i] !== undefined && messages[i].status !== undefined && messages[i].status === 'received') {
+          lastReceivedId = messages[i].id;
+          break;
+        }
+      }
+
+      return lastReceivedId;
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "getGroupStyles", function (m) {
+      var l = m.length;
+      var messageGroupStyles = {};
+
+      var messages = _toConsumableArray(m);
+
+      for (var i = 0; i < l; i++) {
+        var previousMessage = messages[i - 1];
+        var message = messages[i];
+        var nextMessage = messages[i + 1];
+        var groupStyles = [];
+
+        if (message.type === 'message.date') {
+          continue;
+        }
+
+        if (message.type === 'channel.event') {
+          continue;
+        }
+
+        if (message.type === 'channel.intro') {
+          continue;
+        }
+
+        var userId = message.user.id;
+        var isTopMessage = !previousMessage || previousMessage.type === 'channel.intro' || previousMessage.type === 'message.date' || previousMessage.type === 'system' || previousMessage.type === 'channel.event' || previousMessage.attachments.length !== 0 || userId !== previousMessage.user.id || previousMessage.type === 'error' || previousMessage.deleted_at;
+        var isBottomMessage = !nextMessage || nextMessage.type === 'message.date' || nextMessage.type === 'system' || nextMessage.type === 'channel.event' || nextMessage.type === 'channel.intro' || nextMessage.attachments.length !== 0 || userId !== nextMessage.user.id || nextMessage.type === 'error' || nextMessage.deleted_at;
+
+        if (isTopMessage) {
+          groupStyles.push('top');
+        }
+
+        if (isBottomMessage) {
+          if (isTopMessage || message.deleted_at || message.type === 'error') {
+            groupStyles.splice(0, groupStyles.length);
+            groupStyles.push('single');
+          } else {
+            groupStyles.push('bottom');
+          }
+        }
+
+        if (!isTopMessage && !isBottomMessage) {
+          if (message.deleted_at || message.type === 'error') {
+            groupStyles.splice(0, groupStyles.length);
+            groupStyles.push('single');
+          } else {
+            groupStyles.splice(0, groupStyles.length);
+            groupStyles.push('middle');
+          }
+        }
+
+        if (message.attachments.length !== 0) {
+          groupStyles.splice(0, groupStyles.length);
+          groupStyles.push('single');
+        }
+
+        if (_this.props.noGroupByUser) {
+          groupStyles.splice(0, groupStyles.length);
+          groupStyles.push('single');
+        }
+
+        messageGroupStyles[message.id] = groupStyles;
+      }
+
+      return messageGroupStyles;
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "_onMentionsHoverOrClick", function (e, mentioned_users) {
+      if (!_this.props.onMentionsHover || !_this.props.onMentionsClick) return;
+      var tagName = e.target.tagName.toLowerCase();
+      var textContent = e.target.innerHTML.replace('*', '');
+
+      if (tagName === 'strong' && textContent[0] === '@') {
+        var userName = textContent.replace('@', '');
+        var user = mentioned_users.find(function (user) {
+          return user.name === userName || user.id === userName;
+        });
+
+        if (_this.props.onMentionsHover && e.type === 'mouseover') {
+          _this.props.onMentionsHover(e, user);
+        }
+
+        if (_this.props.onMentionsClick && e.type === 'click') {
+          _this.props.onMentionsHover(e, user);
+        }
+      }
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "addNotification", function (notificationText, type) {
+      if (typeof notificationText !== 'string') return;
+      if (type !== 'success' && type !== 'error') return;
+      var nextIndex = new Date();
+
+      var newNotifications = _toConsumableArray(_this.state.notifications);
+
+      newNotifications.push({
+        id: nextIndex,
+        text: notificationText,
+        type: type
+      });
+
+      _this.setState({
+        notifications: newNotifications
+      }); // remove the notification after 5000 ms
+
+
+      var ct = setTimeout(function () {
+        var index = _this.state.notifications.findIndex(function (notification) {
+          if (notification.id === nextIndex) return true;
+          return false;
+        });
+
+        var newNotifications = _toConsumableArray(_this.state.notifications);
+
+        newNotifications.splice(index, 1);
+
+        _this.setState({
+          notifications: newNotifications
+        });
+      }, 5000);
+
+      _this.notificationTimeouts.push(ct);
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "_loadMore", function () {
+      return _this.props.messageLimit ? _this.props.loadMore(_this.props.messageLimit) : _this.props.loadMore();
+    });
+
+    _this.state = {
+      newMessagesNotification: false,
+      editing: '',
+      online: true,
+      notifications: []
+    };
+    _this.bottomRef = React__default.createRef();
+    _this.messageList = React__default.createRef();
+    _this.messageRefs = {};
+    _this.notificationTimeouts = [];
+    return _this;
+  }
+
+  _createClass(MessageList, [{
+    key: "componentDidMount",
+    value: function componentDidMount() {
+      // start at the bottom
+      this.scrollToBottom();
+      var messageListRect = this.messageList.current.getBoundingClientRect();
+      this.setState({
+        messageListRect: messageListRect
+      });
+      this.props.client.on('connection.changed', this.connectionChanged);
+      document.addEventListener('keydown', this.keypress);
+    }
+  }, {
+    key: "componentWillUnmount",
+    value: function componentWillUnmount() {
+      this.props.client.off('connection.changed', this.connectionChanged);
+      document.removeEventListener('keydown', this.keypress);
+      this.notificationTimeouts.forEach(function (ct) {
+        clearTimeout(ct);
+      });
+    }
+  }, {
+    key: "getSnapshotBeforeUpdate",
+    value: function getSnapshotBeforeUpdate(prevProps) {
+      if (this.props.threadList) {
+        return null;
+      } // Are we adding new items to the list?
+      // Capture the scroll position so we can adjust scroll later.
+
+
+      if (prevProps.messages.length < this.props.messages.length || !deepequal(this.props.eventHistory, prevProps.eventHistory)) {
+        var list = this.messageList.current;
+        return {
+          offsetTop: list.scrollTop,
+          offsetBottom: list.scrollHeight - list.scrollTop
+        };
+      }
+
+      return null;
+    }
+  }, {
+    key: "componentDidUpdate",
+    value: function componentDidUpdate(prevProps, prevState, snapshot) {
+      // If we have a snapshot value, we've just added new items.
+      // Adjust scroll so these new items don't push the old ones out of view.
+      // (snapshot here is the value returned from getSnapshotBeforeUpdate)
+      var userScrolledUp = this.userScrolledUp();
+      var currentLastMessage = this.props.messages[this.props.messages.length - 1];
+      var previousLastMessage = prevProps.messages[prevProps.messages.length - 1];
+
+      if (!previousLastMessage || !currentLastMessage) {
+        return;
+      }
+
+      var hasNewMessage = currentLastMessage.id !== previousLastMessage.id;
+      var isOwner = currentLastMessage.user.id === this.props.client.userID;
+      var list = this.messageList.current; // always scroll down when it's your own message that you added...
+
+      var scrollToBottom = hasNewMessage && (isOwner || !userScrolledUp);
+
+      if (scrollToBottom) {
+        this.scrollToBottom(); // Scroll further once attachments are laoded.
+
+        setTimeout(this.scrollToBottom, 100); // remove the scroll notification if we already scrolled down...
+
+        this.state.newMessagesNotification && this.setState({
+          newMessagesNotification: false
+        });
+        return;
+      }
+
+      if (snapshot !== null) {
+        // Maintain the offsetTop of scroll so that content in viewport doesn't move.
+        // This is for the case where user has scroll up significantly and a new message arrives from someone.
+        if (hasNewMessage) {
+          this.scrollToTarget(snapshot.offsetTop, this.messageList.current);
+        } else {
+          // Maintain the bottomOffset of scroll.
+          // This is for the case of pagination, when more messages get loaded.
+          this.scrollToTarget(list.scrollHeight - snapshot.offsetBottom, this.messageList.current);
+        }
+      } // Check the scroll position... if you're scrolled up show a little notification
+
+
+      if (hasNewMessage && !this.state.newMessagesNotification) {
+        this.setState({
+          newMessagesNotification: true
+        });
+      }
+    }
+  }, {
+    key: "render",
+    // eslint-disable-next-line
+    value: function render() {
+      var _this2 = this;
+
+      var allMessages = _toConsumableArray(this.props.messages);
+
+      var MessageSystem = this.props.MessageSystem;
+      allMessages = this.insertDates(allMessages);
+
+      if (this.props.HeaderComponent) {
+        allMessages = this.insertIntro(allMessages);
+      }
+
+      var messageGroupStyles = this.getGroupStyles(allMessages);
+      var _this$props = this.props,
+          TypingIndicator = _this$props.TypingIndicator,
+          DateSeparator = _this$props.dateSeparator,
+          HeaderComponent = _this$props.HeaderComponent,
+          EmptyStateIndicator = _this$props.EmptyStateIndicator; // sort by date
+
+      allMessages.sort(function (a, b) {
+        return a.created_at - b.created_at;
+      }); // get the readData
+
+      var readData = this.getReadStates(allMessages);
+      var lastReceivedId = this.getLastReceived(allMessages);
+      var elements = []; // loop over the messages
+
+      var _iteratorNormalCompletion5 = true;
+      var _didIteratorError5 = false;
+      var _iteratorError5 = undefined;
+
+      try {
+        for (var _iterator5 = allMessages[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+          var message = _step5.value;
+
+          if (message.id) {
+            this.messageRefs[message.id] = React__default.createRef();
+          }
+
+          if (message.type === 'message.date') {
+            if (this.props.threadList) {
+              continue;
+            }
+
+            elements.push(React__default.createElement("li", {
+              key: message.date.toISOString() + '-i'
+            }, React__default.createElement(DateSeparator, {
+              date: message.date
+            })));
+          } else if (message.type === 'channel.intro') {
+            elements.push(React__default.createElement("li", {
+              key: "intro"
+            }, React__default.createElement(HeaderComponent, null)));
+          } else if (message.type === 'channel.event' || message.type === 'system') {
+            MessageSystem && elements.push(React__default.createElement("li", {
+              key: message.type === 'system' ? message.created_at : message.type === 'channel.event' ? message.event.created_at : ''
+            }, React__default.createElement(MessageSystem, {
+              message: message
+            })));
+          } else if (message.type !== 'message.read') {
+            var groupStyles = messageGroupStyles[message.id];
+
+            if (!groupStyles) {
+              groupStyles = [];
+            }
+
+            var readBy = readData[message.id] || [];
+            elements.push(React__default.createElement("li", {
+              className: "str-chat__li str-chat__li--".concat(groupStyles),
+              key: message.id || message.created_at,
+              ref: this.messageRefs[message.id]
+            }, React__default.createElement(Message, {
+              client: this.props.client,
+              openThread: this.props.openThread,
+              members: this.props.members,
+              watchers: this.props.watchers,
+              message: message,
+              groupStyles: groupStyles,
+              readBy: readBy,
+              lastReceivedId: lastReceivedId === message.id ? lastReceivedId : null,
+              editing: !!(this.state.editing && this.state.editing === message.id),
+              clearEditingState: this.clearEditingState,
+              setEditingState: this.setEditingState,
+              messageListRect: this.state.messageListRect,
+              channel: this.props.channel,
+              threadList: this.props.threadList,
+              retrySendMessage: this.props.retrySendMessage,
+              addNotification: this.addNotification,
+              updateMessage: this.props.updateMessage,
+              removeMessage: this.props.removeMessage,
+              Message: this.props.Message,
+              unsafeHTML: this.props.unsafeHTML,
+              Attachment: this.props.Attachment,
+              onMentionsClick: this.props.onMentionsClick,
+              onMentionsHover: this.props.onMentionsHover,
+              messageActions: this.props.messageActions,
+              additionalMessageInputProps: this.props.additionalMessageInputProps,
+              getFlagMessageSuccessNotification: this.props.getFlagMessageSuccessNotification,
+              getFlagMessageErrorNotification: this.props.getFlagMessageErrorNotification,
+              getMuteUserSuccessNotification: this.props.getMuteUserSuccessNotification,
+              getMuteUserErrorNotification: this.props.getMuteUserErrorNotification
+            })));
+          }
+        }
+      } catch (err) {
+        _didIteratorError5 = true;
+        _iteratorError5 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion5 && _iterator5.return != null) {
+            _iterator5.return();
+          }
+        } finally {
+          if (_didIteratorError5) {
+            throw _iteratorError5;
+          }
+        }
+      }
+
+      return React__default.createElement(React__default.Fragment, null, React__default.createElement("div", {
+        className: "str-chat__list ".concat(this.props.threadList ? 'str-chat__list--thread' : ''),
+        ref: this.messageList
+      }, !elements.length ? React__default.createElement(EmptyStateIndicator, {
+        listType: "message"
+      }) : React__default.createElement(ReverseInfiniteScroll, {
+        loadMore: this._loadMore,
+        hasMore: this.props.hasMore,
+        isLoading: this.props.loadingMore,
+        listenToScroll: this.listenToScroll,
+        useWindow: false,
+        loader: React__default.createElement(Center, {
+          key: "loadingindicator"
+        }, React__default.createElement(LoadingIndicator, {
+          size: 20
+        }))
+      }, React__default.createElement("ul", {
+        className: "str-chat__ul"
+      }, elements), this.props.TypingIndicator && React__default.createElement(TypingIndicator, {
+        typing: this.props.typing,
+        client: this.props.client
+      }), React__default.createElement("div", {
+        key: "bottom",
+        ref: this.bottomRef
+      }))), React__default.createElement("div", {
+        className: "str-chat__list-notifications"
+      }, this.state.notifications.map(function (notification) {
+        return React__default.createElement(Notification, {
+          active: true,
+          key: notification.id,
+          type: notification.type
+        }, notification.text);
+      }), React__default.createElement(Notification, {
+        active: !this.state.online,
+        type: "error"
+      }, "Connection failure, reconnecting now..."), React__default.createElement(MessageNotification, {
+        showNotification: this.state.newMessagesNotification,
+        onClick: function onClick() {
+          return _this2.goToNewMessages();
+        }
+      }, "New Messages!")));
+    }
+  }]);
+
+  return MessageList;
+}(React.PureComponent);
+
+_defineProperty(exports.MessageList, "propTypes", {
+  /**
+   * Typing indicator UI component to render
+   *
+   * Defaults to and accepts same props as: [TypingIndicator](https://github.com/GetStream/stream-chat-react/blob/master/src/components/TypingIndicator.js)
+   * */
+  TypingIndicator: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
+
+  /**
+   * Date separator UI component to render
+   *
+   * Defaults to and accepts same props as: [DateSeparator](https://github.com/GetStream/stream-chat-react/blob/master/src/components/DateSeparator.js)
+   * */
+  dateSeparator: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
+
+  /** Turn off grouping of messages by user */
+  noGroupByUser: PropTypes.bool,
+
+  /** render HTML instead of markdown. Posting HTML is only allowed server-side */
+  unsafeHTML: PropTypes.bool,
+
+  /** Set the limit to use when paginating messages */
+  messageLimit: PropTypes.number,
+
+  /**
+   * Array of allowed actions on message. e.g. ['edit', 'delete', 'mute', 'flag']
+   * If all the actions need to be disabled, empty array or false should be provided as value of prop.
+   * */
+  messageActions: PropTypes.oneOfType([PropTypes.bool, PropTypes.array]),
+
+  /**
+   * Boolean weather current message list is a thread.
+   */
+  threadList: PropTypes.bool,
+
+  /**
+   * Function that returns message/text as string to be shown as notification, when request for flagging a message is successful
+   *
+   * This function should accept following params:
+   *
+   * @param message A [message object](https://getstream.io/chat/docs/#message_format) which is flagged.
+   *
+   * */
+  getFlagMessageSuccessNotification: PropTypes.func,
+
+  /**
+   * Function that returns message/text as string to be shown as notification, when request for flagging a message runs into error
+   *
+   * This function should accept following params:
+   *
+   * @param message A [message object](https://getstream.io/chat/docs/#message_format) which is flagged.
+   *
+   * */
+  getFlagMessageErrorNotification: PropTypes.func,
+
+  /**
+   * Function that returns message/text as string to be shown as notification, when request for muting a user is successful
+   *
+   * This function should accept following params:
+   *
+   * @param user A user object which is being muted
+   *
+   * */
+  getMuteUserSuccessNotification: PropTypes.func,
+
+  /**
+   * Function that returns message/text as string to be shown as notification, when request for muting a user runs into error
+   *
+   * This function should accept following params:
+   *
+   * @param user A user object which is being muted
+   *
+   * */
+  getMuteUserErrorNotification: PropTypes.func,
+
+  /** **Available from [chat context](https://getstream.github.io/stream-chat-react/#chat)** */
+  client: PropTypes.object,
+
+  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
+  Attachment: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
+
+  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
+  Message: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
+
+  /**
+   * Custom UI component to display system messages.
+   *
+   * Defaults to and accepts same props as: [EventComponent](https://github.com/GetStream/stream-chat-react/blob/master/src/components/EventComponent.js)
+   */
+  MessageSystem: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
+
+  /**
+   * The UI Indicator to use when MessagerList or ChannelList is empty
+   * */
+  EmptyStateIndicator: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
+
+  /**
+   * Component to render at the top of the MessageList
+   * */
+  HeaderComponent: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
+
+  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
+  messages: PropTypes.array.isRequired,
+
+  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
+  channel: PropTypes.object.isRequired,
+
+  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
+  updateMessage: PropTypes.func.isRequired,
+
+  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
+  retrySendMessage: PropTypes.func,
+
+  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
+  removeMessage: PropTypes.func,
+
+  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
+  onMentionsClick: PropTypes.func,
+
+  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
+  onMentionsHover: PropTypes.func,
+
+  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
+  openThread: PropTypes.func,
+
+  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
+  members: PropTypes.object,
+
+  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
+  watchers: PropTypes.object,
+
+  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
+  read: PropTypes.object,
+
+  /** **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)** */
+  typing: PropTypes.object,
+
+  /**
+   * Additional props for underlying MessageInput component. We have instance of MessageInput
+   * component in MessageSimple component, for handling edit state.
+   * Available props - https://getstream.github.io/stream-chat-react/#messageinput
+   * */
+  additionalMessageInputProps: PropTypes.object
+});
+
+_defineProperty(exports.MessageList, "defaultProps", {
+  Message: MessageSimple,
+  MessageSystem: EventComponent,
+  threadList: false,
+  Attachment: Attachment,
+  dateSeparator: DateSeparator,
+  EmptyStateIndicator: EmptyStateIndicator,
+  unsafeHTML: false,
+  noGroupByUser: false,
+  messageActions: Object.keys(MESSAGE_ACTIONS)
+});
+
+exports.MessageList = withChannelContext(exports.MessageList);
+
+var Center = function Center(_ref2) {
+  var children = _ref2.children;
+  return React__default.createElement("div", {
+    className: "str-chat__list__center"
+  }, children);
+};
+
+var Notification = function Notification(_ref3) {
+  var children = _ref3.children,
+      active = _ref3.active,
+      type = _ref3.type;
+
+  if (active) {
+    return React__default.createElement("div", {
+      className: "str-chat__custom-notification notification-".concat(type)
+    }, children);
+  }
+
+  return null;
+};
+
+function ownKeys$7(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread$7(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$7(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$7(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 var SimpleReactionsList =
 /*#__PURE__*/
 function (_React$PureComponent) {
@@ -10756,10 +11566,9 @@ function (_React$PureComponent) {
     });
 
     _defineProperty(_assertThisInitialized(_this), "getUsernames", function (reactions) {
-      var usernames = reactions.map(function (item) {
+      return reactions.map(function (item) {
         return item.user !== null ? item.user.name || item.user.id : 'null';
       });
-      return usernames;
     });
 
     _defineProperty(_assertThisInitialized(_this), "setUsernames", function (type) {
@@ -10777,8 +11586,7 @@ function (_React$PureComponent) {
     });
 
     _defineProperty(_assertThisInitialized(_this), "renderUsernames", function (users) {
-      var str = users.join(', ');
-      return str;
+      return users.join(', ');
     });
 
     return _this;
@@ -10812,12 +11620,20 @@ function (_React$PureComponent) {
 
 _defineProperty(SimpleReactionsList, "propTypes", {
   reactions: PropTypes.array,
-  reaction_coutns: PropTypes.object,
-  renderReactions: PropTypes.func,
+
+  /** Object/map of reaction id/type (e.g. 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry') vs count */
+  reaction_counts: PropTypes.object,
   showTooltip: PropTypes.bool,
 
   /** Provide a list of reaction options [{name: 'angry', emoji: 'angry'}] */
-  reactionOptions: PropTypes.array
+  reactionOptions: PropTypes.array,
+
+  /**
+   * Handler to set/unset reaction on message.
+   *
+   * @param type e.g. 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry'
+   * */
+  handleReaction: PropTypes.func
 });
 
 _defineProperty(SimpleReactionsList, "defaultProps", {
@@ -10926,7 +11742,7 @@ function (_React$PureComponent) {
     key: "render",
     value: function render() {
       var _this$props = this.props,
-          Attachment$$1 = _this$props.Attachment,
+          Attachment = _this$props.Attachment,
           message = _this$props.message,
           groupStyles = _this$props.groupStyles,
           editing = _this$props.editing,
@@ -10938,7 +11754,7 @@ function (_React$PureComponent) {
           messageListRect = _this$props.messageListRect,
           channelConfig = _this$props.channelConfig,
           threadList = _this$props.threadList,
-          openThread = _this$props.openThread,
+          handleOpenThread = _this$props.handleOpenThread,
           Message = _this$props.Message,
           onMentionsHoverMessage = _this$props.onMentionsHoverMessage,
           onMentionsClickMessage = _this$props.onMentionsClickMessage,
@@ -11022,7 +11838,7 @@ function (_React$PureComponent) {
           __html: threadSvg
         },
         onClick: function onClick(e) {
-          return openThread(e, message);
+          return handleOpenThread(e, message);
         }
       }), getMessageActions().length > 0 && React__default.createElement("span", {
         onClick: this.onClickOptionsAction
@@ -11090,7 +11906,7 @@ function (_React$PureComponent) {
         fill: "#EA152F",
         fillRule: "evenodd"
       })), "Message failed. Click to try again.")), hasAttachment && attachments.map(function (attachment, index) {
-        return React__default.createElement(Attachment$$1, {
+        return React__default.createElement(Attachment, {
           key: "".concat(message.id, "-").concat(index),
           attachment: attachment,
           actionHandler: handleAction
@@ -11102,7 +11918,7 @@ function (_React$PureComponent) {
         reactions: message.latest_reactions,
         handleReaction: handleReaction
       }), !initialMessage && React__default.createElement(MessageRepliesCountButton, {
-        onClick: openThread,
+        onClick: handleOpenThread,
         reply_count: message.reply_count
       })))));
     }
@@ -11123,7 +11939,7 @@ _defineProperty(MessageLivestream, "propTypes", {
 
   /**
    *
-   * @deprecated Its not recommended to use this anymore. All the methods in this HOC are provided explicitely.
+   * @deprecated Its not recommended to use this anymore. All the methods in this HOC are provided explicitly.
    *
    * The higher order message component, most logic is delegated to this component
    * @see See [Message HOC](https://getstream.github.io/stream-chat-react/#message) for example
@@ -11144,7 +11960,7 @@ _defineProperty(MessageLivestream, "propTypes", {
   threadList: PropTypes.bool,
 
   /** Function to open thread on current messxage */
-  openThread: PropTypes.func,
+  handleOpenThread: PropTypes.func,
 
   /** If the message is in edit state */
   editing: PropTypes.bool,
@@ -11155,7 +11971,10 @@ _defineProperty(MessageLivestream, "propTypes", {
   /** Returns true if message belongs to current user */
   isMyMessage: PropTypes.func,
 
-  /** Returns all allowed actions on message by current user e.g., [edit, delete, flag, mute] */
+  /**
+   * Returns all allowed actions on message by current user e.g., [edit, delete, flag, mute]
+   * Please check [Message](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Message.js) component for default implementation.
+   * */
   getMessageActions: PropTypes.func,
 
   /**
@@ -11387,33 +12206,47 @@ function (_PureComponent) {
       document.removeEventListener('click', this.hideReactions, false);
     }
   }, {
+    key: "renderAttachments",
+    value: function renderAttachments(attachments) {
+      var _this$props2 = this.props,
+          Attachment = _this$props2.Attachment,
+          message = _this$props2.message,
+          handleAction = _this$props2.handleAction;
+      return attachments.map(function (attachment, index) {
+        return React__default.createElement(Attachment, {
+          key: "".concat(message.id, "-").concat(index),
+          attachment: attachment,
+          actionHandler: handleAction
+        });
+      });
+    } // eslint-disable-next-line
+
+  }, {
     key: "render",
     value: function render() {
-      var _this$props2 = this.props,
-          message = _this$props2.message,
-          groupStyles = _this$props2.groupStyles,
-          Attachment$$1 = _this$props2.Attachment,
-          editing = _this$props2.editing,
-          clearEditingState = _this$props2.clearEditingState,
-          updateMessage = _this$props2.updateMessage,
-          threadList = _this$props2.threadList,
-          initialMessage = _this$props2.initialMessage,
-          handleReaction = _this$props2.handleReaction,
-          channelConfig = _this$props2.channelConfig,
-          openThread = _this$props2.openThread,
-          Message = _this$props2.Message,
-          messageListRect = _this$props2.messageListRect,
-          onMentionsHoverMessage = _this$props2.onMentionsHoverMessage,
-          onMentionsClickMessage = _this$props2.onMentionsClickMessage,
-          unsafeHTML = _this$props2.unsafeHTML,
-          handleAction = _this$props2.handleAction,
-          handleRetry = _this$props2.handleRetry,
-          getMessageActions = _this$props2.getMessageActions,
-          isMyMessage = _this$props2.isMyMessage,
-          handleFlag = _this$props2.handleFlag,
-          handleMute = _this$props2.handleMute,
-          handleEdit = _this$props2.handleEdit,
-          handleDelete = _this$props2.handleDelete;
+      var _this$props3 = this.props,
+          message = _this$props3.message,
+          groupStyles = _this$props3.groupStyles,
+          editing = _this$props3.editing,
+          clearEditingState = _this$props3.clearEditingState,
+          updateMessage = _this$props3.updateMessage,
+          threadList = _this$props3.threadList,
+          initialMessage = _this$props3.initialMessage,
+          handleReaction = _this$props3.handleReaction,
+          channelConfig = _this$props3.channelConfig,
+          handleOpenThread = _this$props3.handleOpenThread,
+          Message = _this$props3.Message,
+          messageListRect = _this$props3.messageListRect,
+          onMentionsHoverMessage = _this$props3.onMentionsHoverMessage,
+          onMentionsClickMessage = _this$props3.onMentionsClickMessage,
+          unsafeHTML = _this$props3.unsafeHTML,
+          handleRetry = _this$props3.handleRetry,
+          getMessageActions = _this$props3.getMessageActions,
+          isMyMessage = _this$props3.isMyMessage,
+          handleFlag = _this$props3.handleFlag,
+          handleMute = _this$props3.handleMute,
+          handleEdit = _this$props3.handleEdit,
+          handleDelete = _this$props3.handleDelete;
 
       if (message.type === 'message.read') {
         return null;
@@ -11505,7 +12338,7 @@ function (_PureComponent) {
           __html: threadSvg$1
         },
         onClick: function onClick(e) {
-          return openThread(e, message);
+          return handleOpenThread(e, message);
         }
       }), getMessageActions().length > 0 && React__default.createElement("span", {
         onClick: this.onClickOptionsAction
@@ -11535,13 +12368,7 @@ function (_PureComponent) {
         }
       }) : renderText(message)), galleryImages.length !== 0 && React__default.createElement(Gallery, {
         images: galleryImages
-      }), message.text === '' && attachments.map(function (attachment, index) {
-        return React__default.createElement(Attachment$$1, {
-          key: "".concat(message.id, "-").concat(index),
-          attachment: attachment,
-          actionHandler: handleAction
-        });
-      }), message.latest_reactions && message.latest_reactions.length !== 0 && message.text !== '' && React__default.createElement(SimpleReactionsList, {
+      }), message.text === '' && this.renderAttachments(attachments), message.latest_reactions && message.latest_reactions.length !== 0 && message.text !== '' && React__default.createElement(SimpleReactionsList, {
         reaction_counts: message.reaction_counts,
         handleReaction: handleReaction,
         reactions: message.latest_reactions
@@ -11556,18 +12383,12 @@ function (_PureComponent) {
         d: "M7 0a7 7 0 1 0 0 14A7 7 0 0 0 7 0zm.875 10.938a.438.438 0 0 1-.438.437h-.875a.438.438 0 0 1-.437-.438v-.874c0-.242.196-.438.438-.438h.875c.241 0 .437.196.437.438v.874zm0-2.626a.438.438 0 0 1-.438.438h-.875a.438.438 0 0 1-.437-.438v-5.25c0-.241.196-.437.438-.437h.875c.241 0 .437.196.437.438v5.25z",
         fill: "#EA152F",
         fillRule: "evenodd"
-      })), "Message failed. Click to try again.")), this.renderStatus(), message.text !== '' && hasAttachment && attachments.map(function (attachment, index) {
-        return React__default.createElement(Attachment$$1, {
-          key: "".concat(message.id, "-").concat(index),
-          attachment: attachment,
-          actionHandler: handleAction
-        });
-      }), message.latest_reactions && message.latest_reactions.length !== 0 && message.text === '' && React__default.createElement(SimpleReactionsList, {
+      })), "Message failed. Click to try again.")), this.renderStatus(), message.text !== '' && hasAttachment && this.renderAttachments(attachments), message.latest_reactions && message.latest_reactions.length !== 0 && message.text === '' && React__default.createElement(SimpleReactionsList, {
         reaction_counts: message.reaction_counts,
         handleReaction: handleReaction,
         reactions: message.latest_reactions
       }), !threadList && React__default.createElement(MessageRepliesCountButton, {
-        onClick: openThread,
+        onClick: handleOpenThread,
         reply_count: message.reply_count
       }))));
     }
@@ -11588,7 +12409,7 @@ _defineProperty(MessageTeam, "propTypes", {
 
   /**
    *
-   * @deprecated Its not recommended to use this anymore. All the methods in this HOC are provided explicitely.
+   * @deprecated Its not recommended to use this anymore. All the methods in this HOC are provided explicitly.
    *
    * The higher order message component, most logic is delegated to this component
    * @see See [Message HOC](https://getstream.github.io/stream-chat-react/#message) for example
@@ -11611,7 +12432,7 @@ _defineProperty(MessageTeam, "propTypes", {
   threadList: PropTypes.bool,
 
   /** Function to open thread on current messxage */
-  openThread: PropTypes.func,
+  handleOpenThread: PropTypes.func,
 
   /** If the message is in edit state */
   editing: PropTypes.bool,
@@ -11622,7 +12443,10 @@ _defineProperty(MessageTeam, "propTypes", {
   /** Returns true if message belongs to current user */
   isMyMessage: PropTypes.func,
 
-  /** Returns all allowed actions on message by current user e.g., [edit, delete, flag, mute] */
+  /**
+   * Returns all allowed actions on message by current user e.g., [edit, delete, flag, mute]
+   * Please check [Message](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Message.js) component for default implementation.
+   * */
   getMessageActions: PropTypes.func,
 
   /**
@@ -11683,9 +12507,16 @@ _defineProperty(MessageTeam, "defaultProps", {
   groupStyles: ['single']
 });
 
+function ownKeys$8(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread$8(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$8(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$8(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 /**
  * Thread - The Thread renders a parent message with a list of replies. Use the standard message list of the main channel's messages.
  * The thread is only used for the list of replies to a message.
+ * Underlying MessageList, MessageInput and Message components can be customized using props:
+ * - additionalParentMessageProps
+ * - additionalMessageListProps
+ * - additionalMessageInputProps
  *
  * @example ./docs/Thread.md
  * @extends Component
@@ -11763,14 +12594,36 @@ _defineProperty(exports.Thread, "propTypes", {
   /**
    * **Available from [channel context](https://getstream.github.io/stream-chat-react/#channel)**
    * If the thread is currently loading more messages. This is helpful to display a loading indicator on threadlist */
-  threadLoadingMore: PropTypes.bool
+  threadLoadingMore: PropTypes.bool,
+
+  /**
+   * Additional props for underlying Message component of parent message at the top.
+   * Available props - https://getstream.github.io/stream-chat-react/#message
+   * */
+  additionalParentMessageProps: PropTypes.object,
+
+  /**
+   * Additional props for underlying MessageList component.
+   * Available props - https://getstream.github.io/stream-chat-react/#messagelist
+   * */
+  additionalMessageListProps: PropTypes.object,
+
+  /**
+   * Additional props for underlying MessageInput component.
+   * Available props - https://getstream.github.io/stream-chat-react/#messageinput
+   * */
+  additionalMessageInputProps: PropTypes.object,
+
+  /** Customized MessageInput component to used within Thread instead of default MessageInput */
+  MessageInput: PropTypes.oneOfType([PropTypes.node, PropTypes.func])
 });
 
 _defineProperty(exports.Thread, "defaultProps", {
   threadHasMore: true,
   threadLoadingMore: true,
   fullWidth: false,
-  autoFocus: true
+  autoFocus: true,
+  MessageInput: exports.MessageInput
 });
 
 var ThreadInner =
@@ -11830,8 +12683,7 @@ function (_React$PureComponent2) {
       // Capture the scroll position so we can adjust scroll later.
       if (prevProps.threadMessages.length < this.props.threadMessages.length) {
         var list = this.messageList.current;
-        var pos = list.scrollHeight - list.scrollTop;
-        return pos;
+        return list.scrollHeight - list.scrollTop;
       }
 
       return null;
@@ -11922,10 +12774,11 @@ function (_React$PureComponent2) {
         message: this.props.thread,
         initialMessage: true,
         threadList: true,
-        Message: this.props.Message
-      }, this.props)), React__default.createElement("div", {
+        Message: this.props.Message // TODO: remove the following line in next release, since we already have additionalParentMessageProps now.
+
+      }, this.props, this.props.additionalParentMessageProps)), React__default.createElement("div", {
         className: "str-chat__thread-start"
-      }, "Start of a new thread"), React__default.createElement(exports.MessageList, {
+      }, "Start of a new thread"), React__default.createElement(exports.MessageList, _extends({
         messages: this.props.threadMessages,
         read: read,
         threadList: true,
@@ -11933,11 +12786,11 @@ function (_React$PureComponent2) {
         hasMore: this.props.threadHasMore,
         loadingMore: this.props.threadLoadingMore,
         Message: this.props.Message
-      }), React__default.createElement(exports.MessageInput, {
-        Input: MessageInputSmall,
+      }, this.props.additionalMessageListProps)), smartRender(this.props.MessageInput, _objectSpread$8({
+        MessageInputSmall: MessageInputSmall,
         parent: this.props.thread,
         focus: this.props.autoFocus
-      })));
+      }, this.props.additionalMessageInputProps))));
     }
   }]);
 
@@ -12012,6 +12865,14 @@ function (_React$PureComponent) {
   return TypingIndicator;
 }(React__default.PureComponent);
 
+_defineProperty(TypingIndicator, "propTypes", {
+  /** @see See [chat context](https://getstream.github.io/stream-chat-react/#chatcontext) doc */
+  client: PropTypes.object,
+
+  /** @see See [channel context](https://getstream.github.io/stream-chat-react/#channelcontext) doc */
+  typing: PropTypes.object
+});
+
 /**
  * Window - A UI component for conditionally displaying thread or channel.
  *
@@ -12033,14 +12894,18 @@ function (_React$PureComponent) {
   _createClass(Window, [{
     key: "render",
     value: function render() {
-      // If thread is active and window should hide on thread. Return null
-      if (this.props.thread && this.props.hideOnThread) {
+      var _this$props = this.props,
+          thread = _this$props.thread,
+          hideOnThread = _this$props.hideOnThread,
+          children = _this$props.children; // If thread is active and window should hide on thread. Return null
+
+      if (thread && hideOnThread) {
         return null;
       }
 
       return React__default.createElement("div", {
         className: "str-chat__main-panel"
-      }, this.props.children);
+      }, children);
     }
   }]);
 
@@ -12061,40 +12926,76 @@ _defineProperty(exports.Window, "defaultProps", {
 
 exports.Window = withChannelContext(exports.Window);
 
-// Setup
-
-exports.Avatar = Avatar;
-exports.Message = Message;
-exports.Chat = Chat;
-exports.MessageInputLarge = MessageInputLarge;
-exports.MessageInputFlat = MessageInputFlat;
-exports.MessageInputSmall = MessageInputSmall;
 exports.Attachment = Attachment;
+exports.AttachmentActions = AttachmentActions;
+exports.Audio = Audio;
+exports.Avatar = Avatar;
+exports.Card = Card;
+exports.ChannelContext = ChannelContext;
+exports.ChannelPreview = ChannelPreview;
 exports.ChannelPreviewCompact = ChannelPreviewCompact;
+exports.ChannelPreviewCountOnly = ChannelPreviewCountOnly;
+exports.ChannelPreviewLastMessage = ChannelPreviewLastMessage;
 exports.ChannelPreviewMessenger = ChannelPreviewMessenger;
+exports.ChannelSearch = ChannelSearch;
+exports.Chat = Chat;
+exports.ChatAutoComplete = ChatAutoComplete;
+exports.ChatContext = ChatContext;
+exports.ChatDown = ChatDown;
+exports.CommandItem = CommandItem;
+exports.DateSeparator = DateSeparator;
+exports.EditMessageForm = EditMessageForm;
+exports.EmoticonItem = EmoticonItem;
+exports.EmptyStateIndicator = EmptyStateIndicator;
+exports.EventComponent = EventComponent;
+exports.Gallery = Gallery;
+exports.Image = Image;
+exports.InfiniteScroll = InfiniteScroll;
+exports.InfiniteScrollPaginator = InfiniteScrollPaginator;
+exports.Item = Item;
+exports.KEY_CODES = KEY_CODES;
+exports.List = List;
+exports.LoadMoreButton = LoadMoreButton;
 exports.LoadMorePaginator = LoadMorePaginator;
 exports.LoadingChannels = LoadingChannels;
-exports.InfiniteScrollPaginator = InfiniteScrollPaginator;
+exports.LoadingErrorIndicator = LoadingErrorIndicator;
 exports.LoadingIndicator = LoadingIndicator;
+exports.MESSAGE_ACTIONS = MESSAGE_ACTIONS;
+exports.Message = Message;
+exports.MessageActions = MessageActions;
+exports.MessageActionsBox = MessageActionsBox;
 exports.MessageCommerce = MessageCommerce;
+exports.MessageInputFlat = MessageInputFlat;
+exports.MessageInputLarge = MessageInputLarge;
+exports.MessageInputSmall = MessageInputSmall;
 exports.MessageLivestream = MessageLivestream;
-exports.MessageTeam = MessageTeam;
+exports.MessageNotification = MessageNotification;
+exports.MessageRepliesCountButton = MessageRepliesCountButton;
 exports.MessageSimple = MessageSimple;
+exports.MessageTeam = MessageTeam;
+exports.Modal = Modal;
+exports.ReactionSelector = ReactionSelector;
+exports.ReactionsList = ReactionsList;
+exports.ReverseInfiniteScroll = ReverseInfiniteScroll;
+exports.SafeAnchor = SafeAnchor;
+exports.SendButton = SendButton;
+exports.SimpleReactionsList = SimpleReactionsList;
+exports.Tooltip = Tooltip;
 exports.TypingIndicator = TypingIndicator;
-exports.emojiSetDef = emojiSetDef;
+exports.UserItem = UserItem;
+exports.byDate = byDate;
 exports.commonEmoji = commonEmoji;
 exports.defaultMinimalEmojis = defaultMinimalEmojis;
+exports.defaultScrollToItem = defaultScrollToItem;
 exports.emojiData = emojiData;
+exports.emojiSetDef = emojiSetDef;
+exports.formatArray = formatArray;
+exports.generateRandomId = generateRandomId;
 exports.isOnlyEmojis = isOnlyEmojis;
 exports.isPromise = isPromise;
-exports.byDate = byDate;
-exports.formatArray = formatArray;
+exports.listener = Listeners;
 exports.renderText = renderText;
-exports.generateRandomId = generateRandomId;
 exports.smartRender = smartRender;
-exports.MESSAGE_ACTIONS = MESSAGE_ACTIONS;
-exports.ChatContext = ChatContext;
-exports.withChatContext = withChatContext;
-exports.ChannelContext = ChannelContext;
 exports.withChannelContext = withChannelContext;
+exports.withChatContext = withChatContext;
 //# sourceMappingURL=index.js.map

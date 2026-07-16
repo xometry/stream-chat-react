@@ -4,7 +4,7 @@ import { withChatContext, ChannelContext } from '../context';
 import { LoadingIndicator } from './LoadingIndicator';
 import { LoadingErrorIndicator } from './LoadingErrorIndicator';
 
-import uuidv4 from 'uuid/v4';
+import { v4 as uuidv4 } from 'uuid';
 import PropTypes from 'prop-types';
 import Immutable from 'seamless-immutable';
 import Visibility from 'visibilityjs';
