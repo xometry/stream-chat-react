@@ -6239,7 +6239,7 @@ function (_PureComponent2) {
     _defineProperty(_assertThisInitialized(_this2), "_onMentionsHoverOrClick", function (e, mentioned_users) {
       if (!_this2.props.onMentionsHover && !_this2.props.onMentionsClick) return;
       var tagName = e.target.tagName.toLowerCase();
-      var textContent = e.target.innerHTML.replace('*', '');
+      var textContent = e.target.innerHTML.replace(/\*/g, '');
 
       if (tagName === 'strong' && textContent[0] === '@') {
         var userName = textContent.replace('@', '');
@@ -10931,7 +10931,7 @@ function (_PureComponent) {
     _defineProperty(_assertThisInitialized(_this), "_onMentionsHoverOrClick", function (e, mentioned_users) {
       if (!_this.props.onMentionsHover || !_this.props.onMentionsClick) return;
       var tagName = e.target.tagName.toLowerCase();
-      var textContent = e.target.innerHTML.replace('*', '');
+      var textContent = e.target.innerHTML.replace(/\*/g, '');
 
       if (tagName === 'strong' && textContent[0] === '@') {
         var userName = textContent.replace('@', '');

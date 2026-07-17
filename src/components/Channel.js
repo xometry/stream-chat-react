@@ -588,7 +588,7 @@ class ChannelInner extends PureComponent {
     if (!this.props.onMentionsHover && !this.props.onMentionsClick) return;
 
     const tagName = e.target.tagName.toLowerCase();
-    const textContent = e.target.innerHTML.replace('*', '');
+    const textContent = e.target.innerHTML.replace(/\*/g, '');
     if (tagName === 'strong' && textContent[0] === '@') {
       const userName = textContent.replace('@', '');
       const user = mentioned_users.find(
