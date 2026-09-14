@@ -77,7 +77,7 @@ const normalBundle = {
     'react-markdown/with-html',
     'react-file-utils',
     'react-file-utils/dist/index.css',
-    'uuid/v4',
+    'uuid',
     '@fortawesome/react-fontawesome',
     '@fortawesome/free-regular-svg-icons',
     '@babel/runtime/regenerator',
@@ -170,5 +170,16 @@ const fullBrowserBundle = {
   ],
 };
 
-export default () =>
-  process.env.ROLLUP_WATCH ? [normalBundle] : [normalBundle, fullBrowserBundle];
+// Skip fullBrowserBundle by default: axios>=1.16 uses syntax (??) that this
+// Rollup/acorn toolchain cannot parse when bundling node_modules. Primary
+// package entries (main/module) remain intact; set BUILD_BROWSER_BUNDLE=1 to
+// attempt the legacy IIFE bundle.
+export default () => {
+  if (process.env.ROLLUP_WATCH) {
+    return [normalBundle];
+  }
+  if (process.env.BUILD_BROWSER_BUNDLE === '1') {
+    return [normalBundle, fullBrowserBundle];
+  }
+  return [normalBundle];
+};

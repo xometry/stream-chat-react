@@ -4,7 +4,7 @@ import { withChatContext, ChannelContext } from '../context';
 import { LoadingIndicator } from './LoadingIndicator';
 import { LoadingErrorIndicator } from './LoadingErrorIndicator';
 
-import uuidv4 from 'uuid/v4';
+import { v4 as uuidv4 } from 'uuid';
 import PropTypes from 'prop-types';
 import Immutable from 'seamless-immutable';
 import Visibility from 'visibilityjs';
@@ -588,7 +588,7 @@ class ChannelInner extends PureComponent {
     if (!this.props.onMentionsHover && !this.props.onMentionsClick) return;
 
     const tagName = e.target.tagName.toLowerCase();
-    const textContent = e.target.innerHTML.replace('*', '');
+    const textContent = e.target.innerHTML.replace(/\*/g, '');
     if (tagName === 'strong' && textContent[0] === '@') {
       const userName = textContent.replace('@', '');
       const user = mentioned_users.find(
